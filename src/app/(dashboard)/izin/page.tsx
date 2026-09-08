@@ -19,6 +19,22 @@ function toDateOnly(value: unknown): string | null {
   return String(value).slice(0, 10);
 }
 
+const dateTimeFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Asia/Jakarta",
+});
+
+function toDateTimeDisplay(value: unknown): string | null {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(String(value));
+  if (Number.isNaN(date.getTime())) return String(value);
+  return dateTimeFormatter.format(date).replace(/\./g, ":");
+}
+
 function safeBasename(value: string | null) {
   const raw = String(value || "").trim();
   if (!raw) return "";
@@ -83,11 +99,11 @@ export default async function IzinPage({
         sampai_tanggal: toDateOnly(row.sampai_tanggal),
         alasan: (row.alasan as string | null) ?? null,
         status: (row.status as string | null) ?? "Pending",
-        created_at: row.created_at ? String(row.created_at) : null,
+        created_at: toDateTimeDisplay(row.created_at),
         bukti_foto: (row.bukti_foto as string | null) ?? null,
         manager_status: (row.manager_status as string | null) ?? "Pending",
         manager_note: (row.manager_note as string | null) ?? null,
-        manager_at: row.manager_at ? String(row.manager_at) : null,
+        manager_at: toDateTimeDisplay(row.manager_at),
         catatan_admin: (row.catatan_admin as string | null) ?? null,
         bukti_url: fileBukti ? `${BUKTI_DIR_WEB}${encodeURIComponent(fileBukti)}` : "",
       };
