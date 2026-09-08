@@ -13,6 +13,12 @@ export const revalidate = 0;
 const BUKTI_HOST = "https://great.ptslu.id";
 const BUKTI_DIR_WEB = `${BUKTI_HOST}/uploads/izin/`;
 
+function toDateOnly(value: unknown): string | null {
+  if (!value) return null;
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  return String(value).slice(0, 10);
+}
+
 function safeBasename(value: string | null) {
   const raw = String(value || "").trim();
   if (!raw) return "";
@@ -73,8 +79,8 @@ export default async function IzinPage({
         nama: (row.nama as string | null) ?? null,
         foto: (row.foto as string | null) ?? null,
         tipe_izin: (row.tipe_izin as string | null) ?? null,
-        mulai_tanggal: (row.mulai_tanggal as string | null) ?? null,
-        sampai_tanggal: (row.sampai_tanggal as string | null) ?? null,
+        mulai_tanggal: toDateOnly(row.mulai_tanggal),
+        sampai_tanggal: toDateOnly(row.sampai_tanggal),
         alasan: (row.alasan as string | null) ?? null,
         status: (row.status as string | null) ?? "Pending",
         created_at: row.created_at ? String(row.created_at) : null,
