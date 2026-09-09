@@ -20,6 +20,7 @@ const MIME_TYPES: Record<string, string> = {
 const PREFIX_REMAP: [string, string][] = [
   ["admin/uploads/", ""],
   ["uploads/izin/", "izin/"],
+  ["uploads/presensi/", "presensi/"],
   ["absen/", "presensi/"],
 ];
 
