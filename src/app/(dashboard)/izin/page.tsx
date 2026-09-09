@@ -10,8 +10,7 @@ export const metadata = {
 
 export const revalidate = 0;
 
-const BUKTI_HOST = "https://great.ptslu.id";
-const BUKTI_DIR_WEB = `${BUKTI_HOST}/uploads/izin/`;
+const BUKTI_DIR_WEB = "/api/legacy-files/uploads/izin/";
 
 function toDateOnly(value: unknown): string | null {
   if (!value) return null;

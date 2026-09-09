@@ -1,5 +1,5 @@
-export const SITE_BASE = "https://great.ptslu.id/";
-export const EMP_UPLOAD_BASE_URL = "https://great.ptslu.id/admin/uploads/";
+export const SITE_BASE = "/api/legacy-files/";
+export const EMP_UPLOAD_BASE_URL = "/api/legacy-files/admin/uploads/";
 
 const MONTHS_INDO = [
   "",

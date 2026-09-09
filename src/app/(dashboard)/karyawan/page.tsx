@@ -41,9 +41,9 @@ export default async function KaryawanPage() {
       // Fotourl logic simplified
       let foto_url = '';
       if (row.foto_masuk_hari_ini) {
-        foto_url = `https://great.ptslu.id/absen/${row.foto_masuk_hari_ini}`;
+        foto_url = `/api/legacy-files/absen/${row.foto_masuk_hari_ini}`;
       } else if (row.foto) {
-        foto_url = `https://great.ptslu.id/admin/uploads/${encodeURIComponent(row.foto)}`;
+        foto_url = `/api/legacy-files/admin/uploads/${encodeURIComponent(row.foto)}`;
       } else {
         foto_url = `https://ui-avatars.com/api/?name=${encodeURIComponent(nama)}&background=${avatarBg.replace('#', '')}&color=fff`;
       }

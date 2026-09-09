@@ -11,7 +11,7 @@ export default async function KehadiranPage({
   const activeTab = typeof params.tab === "string" && params.tab === "streamer" ? "streamer" : "tetap";
 
   const colors = ['#c7d2fe', '#ddd6fe', '#e9d5ff', '#cbd5e1', '#a5b4fc', '#f5d0fe'];
-  const EMP_UPLOAD_BASE_URL = 'https://great.ptslu.id/admin/uploads/';
+  const EMP_UPLOAD_BASE_URL = '/api/legacy-files/admin/uploads/';
 
   const getScheduleTetap = (ymd: string) => {
     const dt = new Date(ymd);
