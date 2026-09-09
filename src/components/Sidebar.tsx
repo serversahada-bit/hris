@@ -10,7 +10,7 @@ interface SidebarProps {
   isCollapsed?: boolean;
 }
 
-const GA_PATHS = ["/kalender_perawatan", "/legal", "/pengumuman_hc", "/inventaris_hc"];
+const GA_PATHS = ["/legal", "/pengumuman_hc", "/inventaris_hc"];
 
 export default function Sidebar({ pendingIzinCount, isCollapsed = false }: SidebarProps) {
   const pathname = usePathname();
@@ -155,7 +155,7 @@ export default function Sidebar({ pendingIzinCount, isCollapsed = false }: Sideb
 
         {/* General Affair Group */}
         {isCollapsed ? (
-          <Link href="/kalender_perawatan" className={linkClass(GA_PATHS)} title="General Affair">
+          <Link href="/legal" className={linkClass(GA_PATHS)} title="General Affair">
             <span className={`material-symbols-outlined text-[20px] ${iconClassLight(GA_PATHS)}`}>corporate_fare</span>
           </Link>
         ) : (
@@ -178,10 +178,6 @@ export default function Sidebar({ pendingIzinCount, isCollapsed = false }: Sideb
 
             {isGaOpen && (
               <div className="ml-4 pl-4 mb-1 border-l border-slate-200 dark:border-slate-700 flex flex-col">
-                <Link href="/kalender_perawatan" className={linkClass(["/kalender_perawatan"])}>
-                  <span className={`material-symbols-outlined text-[18px] ${iconClassLight(["/kalender_perawatan"])}`}>event_repeat</span>
-                  <span className="text-[14px] whitespace-nowrap">Kalender Perawatan</span>
-                </Link>
                 <Link href="/legal" className={linkClass(["/legal"])}>
                   <span className={`material-symbols-outlined text-[18px] ${iconClassLight(["/legal"])}`}>balance</span>
                   <span className="text-[14px] whitespace-nowrap">Legal</span>
