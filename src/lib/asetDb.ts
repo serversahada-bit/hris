@@ -37,8 +37,16 @@ export async function ensureAsetTable() {
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
 
-  await db.query(`ALTER TABLE aset_kantor ADD COLUMN IF NOT EXISTS interval_perawatan_hari INT NULL`);
-  await db.query(`ALTER TABLE aset_kantor ADD COLUMN IF NOT EXISTS tanggal_perawatan_terakhir DATE NULL`);
+  try {
+    await db.query(`ALTER TABLE aset_kantor ADD COLUMN IF NOT EXISTS interval_perawatan_hari INT NULL`);
+  } catch (error) {
+    console.warn("Skip migrasi kolom interval_perawatan_hari:", error);
+  }
+  try {
+    await db.query(`ALTER TABLE aset_kantor ADD COLUMN IF NOT EXISTS tanggal_perawatan_terakhir DATE NULL`);
+  } catch (error) {
+    console.warn("Skip migrasi kolom tanggal_perawatan_terakhir:", error);
+  }
 }
 
 export async function ensureRiwayatKeuanganTables() {
