@@ -7,10 +7,12 @@ import Topbar from "./Topbar";
 export default function DashboardLayoutClient({
   children,
   pendingIzinCount,
+  pendingLegalitasCount,
   userName,
 }: {
   children: React.ReactNode;
   pendingIzinCount: number;
+  pendingLegalitasCount: number;
   userName: string;
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -73,7 +75,7 @@ export default function DashboardLayoutClient({
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         ${isCollapsed ? "lg:w-[88px]" : "lg:w-[260px] w-[260px]"}`}
       >
-        <Sidebar pendingIzinCount={pendingIzinCount} isCollapsed={isCollapsed} />
+        <Sidebar pendingIzinCount={pendingIzinCount} pendingLegalitasCount={pendingLegalitasCount} isCollapsed={isCollapsed} />
       </aside>
 
       {/* Main Wrapper */}

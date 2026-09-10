@@ -7,12 +7,13 @@ import { usePathname } from "next/navigation";
 
 interface SidebarProps {
   pendingIzinCount: number;
+  pendingLegalitasCount: number;
   isCollapsed?: boolean;
 }
 
 const GA_PATHS = ["/legal", "/pengumuman_hc", "/inventaris_hc"];
 
-export default function Sidebar({ pendingIzinCount, isCollapsed = false }: SidebarProps) {
+export default function Sidebar({ pendingIzinCount, pendingLegalitasCount, isCollapsed = false }: SidebarProps) {
   const pathname = usePathname();
   const [isGaOpen, setIsGaOpen] = useState(() => GA_PATHS.some((p) => pathname.includes(p)));
 
@@ -129,6 +130,25 @@ export default function Sidebar({ pendingIzinCount, isCollapsed = false }: Sideb
         <Link href="/riwayat_lembur" className={linkClass(["/riwayat_lembur", "/lembur", "/approval_lembur"])}>
           <span className={`material-symbols-outlined text-[20px] ${iconClassLight(["/riwayat_lembur", "/lembur", "/approval_lembur"])}`}>schedule</span>
           {!isCollapsed && <span className="text-[15px] whitespace-nowrap flex-1">Lembur</span>}
+        </Link>
+
+        <Link href="/legalitas" className={linkClass(["/legalitas"])}>
+          <span className={`material-symbols-outlined text-[20px] ${iconClassLight(["/legalitas"])} relative`}>
+            verified
+            {isCollapsed && pendingLegalitasCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-[#3c50e0]"></span>
+            )}
+          </span>
+          {!isCollapsed && (
+            <>
+              <span className="text-[15px] whitespace-nowrap flex-1">Legalitas</span>
+              {pendingLegalitasCount > 0 && (
+                <span className="h-5 w-5 rounded bg-[#3c50e0] text-white flex items-center justify-center text-[11px] font-bold">
+                  {pendingLegalitasCount}
+                </span>
+              )}
+            </>
+          )}
         </Link>
 
         {/* Settings Group */}
