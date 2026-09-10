@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { updateProfilKaryawan } from "@/app/actions/karyawan";
+import { updateProfilKaryawan, updateAkunKaryawan } from "@/app/actions/karyawan";
 
 export default function DetailClient({ karyawan, riwayatKarir, presensi, izinCuti }: {
   karyawan: any;
@@ -16,6 +16,7 @@ export default function DetailClient({ karyawan, riwayatKarir, presensi, izinCut
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isSavingPassword, setIsSavingPassword] = useState(false);
   const router = useRouter();
 
   useEffect(() => setMounted(true), []);
@@ -45,6 +46,22 @@ export default function DetailClient({ karyawan, riwayatKarir, presensi, izinCut
       router.refresh();
     } else {
       alert(res.message);
+    }
+  };
+
+  // Handle Password/Akun Submit
+  const handlePasswordSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSavingPassword(true);
+    const formData = new FormData(e.currentTarget);
+    formData.set("id", karyawan.id);
+    const res = await updateAkunKaryawan(formData);
+    setIsSavingPassword(false);
+
+    alert(res.message);
+    if (res.success) {
+      e.currentTarget.reset();
+      router.refresh();
     }
   };
 
@@ -378,22 +395,22 @@ export default function DetailClient({ karyawan, riwayatKarir, presensi, izinCut
                   Tips: Password disimpan sebagai hash terenkripsi. Anda tidak bisa melihat password asli tapi bisa menggantinya. Username juga dapat diubah di sini.
                 </div>
 
-                <form className="space-y-5 max-w-md">
+                <form onSubmit={handlePasswordSubmit} className="space-y-5 max-w-md">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Username (Akun Pengguna)</label>
-                    <input type="text" defaultValue={karyawan.nama_user || ''} className="w-full h-11 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:border-violet-500 dark:text-white transition" placeholder="Masukkan username" />
+                    <input type="text" name="nama_user" defaultValue={karyawan.nama_user || ''} required className="w-full h-11 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:border-violet-500 dark:text-white transition" placeholder="Masukkan username" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password Baru</label>
-                    <input type="password" placeholder="Minimal 6 karakter" className="w-full h-11 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:border-violet-500 dark:text-white transition" />
+                    <input type="password" name="newPassword" placeholder="Minimal 6 karakter (kosongkan jika tidak diubah)" className="w-full h-11 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:border-violet-500 dark:text-white transition" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Konfirmasi Password Baru</label>
-                    <input type="password" placeholder="Ulangi password baru" className="w-full h-11 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:border-violet-500 dark:text-white transition" />
+                    <input type="password" name="confirmPassword" placeholder="Ulangi password baru" className="w-full h-11 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:border-violet-500 dark:text-white transition" />
                   </div>
                   <div className="pt-2">
-                    <button type="button" className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-violet-600 hover:bg-violet-700 transition shadow-sm">
-                      Simpan Password
+                    <button type="submit" disabled={isSavingPassword} className="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-violet-600 hover:bg-violet-700 transition shadow-sm disabled:opacity-60">
+                      {isSavingPassword ? "Menyimpan..." : "Simpan Password"}
                     </button>
                   </div>
                 </form>

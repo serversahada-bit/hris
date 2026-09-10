@@ -69,6 +69,54 @@ export async function updateProfilKaryawan(formData: FormData) {
   }
 }
 
+export async function updateAkunKaryawan(formData: FormData) {
+  try {
+    const id = formData.get("id")?.toString();
+    if (!id) throw new Error("ID Karyawan tidak ditemukan");
+
+    const namaUser = formData.get("nama_user")?.toString().trim() ?? "";
+    const newPassword = formData.get("newPassword")?.toString() ?? "";
+    const confirmPassword = formData.get("confirmPassword")?.toString() ?? "";
+
+    if (!namaUser) {
+      return { success: false, message: "Username tidak boleh kosong." };
+    }
+    if (newPassword || confirmPassword) {
+      if (newPassword.length < 6) {
+        return { success: false, message: "Password baru minimal 6 karakter." };
+      }
+      if (newPassword !== confirmPassword) {
+        return { success: false, message: "Konfirmasi password baru tidak cocok." };
+      }
+    }
+
+    const [existing] = await db.query(
+      "SELECT id FROM karyawan WHERE nama_user = ? AND id <> ?",
+      [namaUser, id]
+    );
+    if ((existing as { id: number }[]).length > 0) {
+      return { success: false, message: "Username sudah dipakai karyawan lain." };
+    }
+
+    const setClauses = ["`nama_user` = ?"];
+    const values: any[] = [namaUser];
+    if (newPassword) {
+      setClauses.push("`password` = ?");
+      values.push(newPassword);
+    }
+    values.push(id);
+
+    await db.query(`UPDATE karyawan SET ${setClauses.join(", ")} WHERE id = ?`, values);
+
+    revalidatePath(`/detail/${id}`);
+
+    return { success: true, message: "Akun berhasil diperbarui." };
+  } catch (error: any) {
+    console.error("Error updating akun karyawan:", error);
+    return { success: false, message: error.message || "Gagal memperbarui akun." };
+  }
+}
+
 export async function tambahKaryawan(formData: FormData) {
   try {
     const fields: Record<string, any> = {
