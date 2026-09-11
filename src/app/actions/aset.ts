@@ -8,8 +8,9 @@ import path from "path";
 import { safeFilename, stampedFilename } from "@/lib/uploads";
 import { generateKodeSistem } from "@/lib/asetUtils";
 import { ensureRiwayatKeuanganTables } from "@/lib/asetDb";
+import { ASET_UPLOAD_DIR } from "@/lib/asetUploads";
 
-const UPLOAD_DIR_FS = path.join(process.cwd(), "public", "uploads", "aset");
+const UPLOAD_DIR_FS = ASET_UPLOAD_DIR;
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED_EXT = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
 

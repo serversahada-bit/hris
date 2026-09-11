@@ -117,7 +117,7 @@ export default async function InventarisHcPage() {
       penanggung_jawab: row.penanggung_jawab,
       catatan: row.catatan,
       foto: row.foto,
-      fotoUrl: row.foto ? `/uploads/aset/${encodeURIComponent(row.foto)}` : null,
+      fotoUrl: row.foto ? `/api/aset-uploads/${encodeURIComponent(row.foto)}` : null,
       interval_perawatan_hari: row.interval_perawatan_hari,
       tanggal_perawatan_terakhir: toDateInputValue(row.tanggal_perawatan_terakhir),
     }));
