@@ -26,7 +26,7 @@ export default async function HRStrukturPage() {
     karyawanList = resList;
 
     const sqlMgr = `
-      SELECT 
+      SELECT
           id,
           nama,
           COALESCE(email_login, email) AS email_kerja,
@@ -36,10 +36,16 @@ export default async function HRStrukturPage() {
           peran
       FROM karyawan
       WHERE (status_karyawan != 'Non-Aktif' OR status_karyawan IS NULL)
-      ORDER BY k.nama ASC
+        AND (
+          LOWER(peran) IN ('manager', 'spv', 'supervisor', 'koordinator')
+          OR LOWER(jabatan) LIKE '%manager%'
+          OR LOWER(jabatan) LIKE '%spv%'
+          OR LOWER(jabatan) LIKE '%supervisor%'
+          OR LOWER(jabatan) LIKE '%koordinator%'
+        )
+      ORDER BY nama ASC
     `;
-    // Wait, the order by k.nama ASC will fail if 'k' alias is not defined
-    const [resMgr]: any = await db.query(sqlMgr.replace('k.nama', 'nama'));
+    const [resMgr]: any = await db.query(sqlMgr);
     managerOptions = resMgr;
 
   } catch (error) {

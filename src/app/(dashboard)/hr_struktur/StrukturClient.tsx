@@ -95,7 +95,15 @@ export default function StrukturClient({
                   </td>
                 </tr>
               ) : (
-                filteredList.map((k, idx) => (
+                filteredList.map((k, idx) => {
+                  const currentManagerInOptions = k.manager_id
+                    ? managerOptions.some((m) => m.id === k.manager_id)
+                    : true;
+                  const rowManagerOptions = currentManagerInOptions
+                    ? managerOptions
+                    : [{ id: k.manager_id, nama: k.manager_nama, posisi: null }, ...managerOptions];
+
+                  return (
                   <tr key={k.id} className="border-b border-slate-100 dark:border-slate-800 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-700/50 transition-colors">
                     {/* No */}
                     <td className="px-5 py-4 align-top text-xs text-slate-400 font-medium">
@@ -142,7 +150,7 @@ export default function StrukturClient({
                           className="flex-1 h-9 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[13px] font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-1 focus:ring-[#3c50e0] focus:border-[#3c50e0]"
                         >
                           <option value="">-- Tidak ada atasan --</option>
-                          {managerOptions.map((m) => (
+                          {rowManagerOptions.map((m) => (
                             <option key={m.id} value={m.id}>
                               {m.nama} {m.posisi ? `(${m.posisi})` : ''}
                             </option>
@@ -162,7 +170,8 @@ export default function StrukturClient({
                       </form>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
