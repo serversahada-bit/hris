@@ -23,6 +23,7 @@ type LeaveRow = {
   status: string | null;
   mulai_tanggal: string | null;
   sampai_tanggal: string | null;
+  durasi_hari: number | string | null;
 };
 
 function normalizeYear(value?: string) {
@@ -115,7 +116,7 @@ export default async function CutiTahunanPage({
 
   try {
     const [leaveRows] = await db.query(
-      `SELECT karyawan_id, tipe_izin, status, mulai_tanggal, sampai_tanggal
+      `SELECT karyawan_id, tipe_izin, status, mulai_tanggal, sampai_tanggal, durasi_hari
        FROM pengajuan_izin
        WHERE mulai_tanggal BETWEEN ? AND ?`,
       [yearStart, yearEnd]
@@ -127,18 +128,27 @@ export default async function CutiTahunanPage({
 
       const type = String(row.tipe_izin ?? "").trim().toLowerCase();
       const status = String(row.status ?? "").trim().toLowerCase();
-      if (type !== "cuti" || status !== "disetujui") continue;
+      const isCutiPenuh = type === "cuti";
+      const isCutiSetengahHari = type === "cuti setengah hari";
+      if ((!isCutiPenuh && !isCutiSetengahHari) || status !== "disetujui") continue;
 
       if (!row.mulai_tanggal) continue;
 
-      const start = new Date(row.mulai_tanggal);
-      const end = new Date(row.sampai_tanggal || row.mulai_tanggal);
-      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) continue;
+      let totalDays: number;
 
-      const actualStart = start <= end ? start : end;
-      const actualEnd = start <= end ? end : start;
-      const [clampedStart, clampedEnd] = clampRangeToYear(actualStart, actualEnd, year);
-      const totalDays = countInclusiveDays(clampedStart, clampedEnd);
+      if (isCutiSetengahHari) {
+        const durasi = Number(row.durasi_hari);
+        totalDays = Number.isFinite(durasi) && durasi > 0 ? durasi : 0.5;
+      } else {
+        const start = new Date(row.mulai_tanggal);
+        const end = new Date(row.sampai_tanggal || row.mulai_tanggal);
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) continue;
+
+        const actualStart = start <= end ? start : end;
+        const actualEnd = start <= end ? end : start;
+        const [clampedStart, clampedEnd] = clampRangeToYear(actualStart, actualEnd, year);
+        totalDays = countInclusiveDays(clampedStart, clampedEnd);
+      }
 
       usedByEmployee.set(employeeId, (usedByEmployee.get(employeeId) ?? 0) + totalDays);
     }
