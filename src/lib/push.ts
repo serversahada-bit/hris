@@ -41,7 +41,11 @@ async function sendToSubscription(sub: PushSubscriptionRow, payload: PushPayload
     if (error.statusCode === 404 || error.statusCode === 410) {
       await db.query('DELETE FROM hc_push_subscriptions WHERE id = ?', [sub.id]);
     } else {
-      console.error('[Push] Gagal kirim notifikasi:', error.message || error);
+      console.error(
+        '[Push] Gagal kirim notifikasi:',
+        error.statusCode,
+        error.body || error.message || error
+      );
     }
     return false;
   }
