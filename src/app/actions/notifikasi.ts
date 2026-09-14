@@ -5,7 +5,7 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { stampedFilename } from "@/lib/uploads";
 import { NOTIF_UPLOAD_DIR } from "@/lib/notifUploads";
-import { sendPushBroadcast } from "@/lib/push";
+import { PushBroadcastError, sendPushBroadcast } from "@/lib/push";
 
 const MAX_BYTES = 3 * 1024 * 1024;
 const ALLOWED_TYPES: Record<string, string> = {
@@ -56,8 +56,8 @@ export async function kirimNotifikasiBroadcast(formData: FormData) {
   try {
     const sent = await sendPushBroadcast({ title, body, url: url || undefined, image: imageUrl });
     return { success: true, sent };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[Notifikasi] Gagal mengirim broadcast:", error);
-    return { success: false, error: "Gagal mengirim notifikasi. Silakan coba lagi." };
+    return { success: false, error: error instanceof PushBroadcastError ? error.message : "Gagal mengirim notifikasi. Silakan coba lagi." };
   }
 }
