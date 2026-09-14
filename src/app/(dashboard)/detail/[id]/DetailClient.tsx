@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { updateProfilKaryawan, updateAkunKaryawan } from "@/app/actions/karyawan";
+import { employeeFotoUrl } from "@/lib/employeePhoto";
 
 export default function DetailClient({ karyawan, riwayatKarir, presensi, izinCuti }: {
   karyawan: any;
@@ -104,7 +105,7 @@ export default function DetailClient({ karyawan, riwayatKarir, presensi, izinCut
             <div className="relative inline-block">
               {karyawan.foto ? (
                 <div className="h-24 w-24 rounded-full mx-auto overflow-hidden shadow-sm border-4 border-slate-100 dark:border-slate-700">
-                  <img src={`/uploads/${karyawan.foto}`} className="h-full w-full object-cover" alt="Foto Karyawan" onError={(e) => {
+                  <img src={employeeFotoUrl(karyawan.foto)} className="h-full w-full object-cover" alt="Foto Karyawan" onError={(e) => {
                       (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(karyawan.nama)}&background=cbd5e1&color=fff`;
                   }}/>
                 </div>
@@ -551,7 +552,7 @@ export default function DetailClient({ karyawan, riwayatKarir, presensi, izinCut
                     <div className="flex items-center gap-6">
                       <div className="h-24 w-24 rounded-full border-4 border-slate-100 dark:border-slate-700 overflow-hidden shrink-0 shadow-inner bg-slate-50 dark:bg-slate-800">
                         {karyawan.foto ? (
-                           <img src={`/uploads/${karyawan.foto}`} className="h-full w-full object-cover" alt="Avatar"/>
+                           <img src={employeeFotoUrl(karyawan.foto)} className="h-full w-full object-cover" alt="Avatar"/>
                         ) : (
                            <div className="h-full w-full flex items-center justify-center">
                              <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-4xl">person</span>

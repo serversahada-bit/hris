@@ -1,5 +1,6 @@
+import { employeeFotoUrl } from "@/lib/employeePhoto";
+
 export const SITE_BASE = "/api/legacy-files/";
-export const EMP_UPLOAD_BASE_URL = "/api/legacy-files/admin/uploads/";
 
 const MONTHS_INDO = [
   "",
@@ -78,14 +79,6 @@ export function absUrl(base: string, value: string) {
   return `${base.replace(/\/$/, "")}/${normalizePath(trimmed)}`;
 }
 
-export function empPhotoUrl(base: string, fotoValue: string) {
-  const trimmed = fotoValue.trim();
-  if (!trimmed) return "";
-  const fileName = trimmed.split("/").pop() ?? "";
-  if (!fileName) return "";
-  return `${base.replace(/\/$/, "")}/${encodeURIComponent(fileName)}`;
-}
-
 export function getRankingPhoto(row: Pick<RankingRow, "foto_masuk" | "foto_profil" | "nama">) {
   const attendancePhoto = row.foto_masuk?.trim() ?? "";
   const profilePhoto = row.foto_profil?.trim() ?? "";
@@ -96,7 +89,7 @@ export function getRankingPhoto(row: Pick<RankingRow, "foto_masuk" | "foto_profi
   }
 
   if (profilePhoto) {
-    return empPhotoUrl(EMP_UPLOAD_BASE_URL, profilePhoto);
+    return employeeFotoUrl(profilePhoto);
   }
 
   return fallback;

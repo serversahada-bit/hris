@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { editKehadiran, toggleJenisJadwal } from "@/app/actions/kehadiran";
+import { employeeFotoUrl } from "@/lib/employeePhoto";
 
 export default function KehadiranClient({
   listTetap,
@@ -349,7 +350,7 @@ export default function KehadiranClient({
                 <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center shrink-0">
                   <div className="flex items-center gap-4">
                      {detailModalData.data?.emp?.foto ? (
-                       <img src={`/api/legacy-files/admin/uploads/${detailModalData.data.emp.foto}`} alt="avatar" className="w-12 h-12 rounded-full object-cover shadow-sm" />
+                       <img src={employeeFotoUrl(detailModalData.data.emp.foto)} alt="avatar" className="w-12 h-12 rounded-full object-cover shadow-sm" />
                      ) : (
                        <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 material-symbols-outlined">person</div>
                      )}

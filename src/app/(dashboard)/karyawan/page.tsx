@@ -1,5 +1,6 @@
 import db from "@/lib/db";
 import KaryawanClient from "./KaryawanClient";
+import { employeeFotoUrl } from "@/lib/employeePhoto";
 
 export const metadata = {
   title: "Data Karyawan - Great HRIS",
@@ -43,7 +44,7 @@ export default async function KaryawanPage() {
       if (row.foto_masuk_hari_ini) {
         foto_url = `/api/legacy-files/absen/${row.foto_masuk_hari_ini}`;
       } else if (row.foto) {
-        foto_url = `/api/legacy-files/admin/uploads/${encodeURIComponent(row.foto)}`;
+        foto_url = employeeFotoUrl(row.foto);
       } else {
         foto_url = `https://ui-avatars.com/api/?name=${encodeURIComponent(nama)}&background=${avatarBg.replace('#', '')}&color=fff`;
       }
