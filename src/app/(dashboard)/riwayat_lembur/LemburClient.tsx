@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { approveRejectLembur, editLembur, deleteLembur } from "@/app/actions/lembur";
+import { useAlert } from "@/components/AlertProvider";
 
 type LemburClientProps = {
   data: any[];
@@ -17,6 +18,7 @@ export default function LemburClient({ data, currentParams }: LemburClientProps)
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { showAlert } = useAlert();
 
   const [modalType, setModalType] = useState<"detail" | "edit" | "approve" | "delete" | "export" | null>(null);
   const [selectedLembur, setSelectedLembur] = useState<any>(null);
@@ -76,9 +78,9 @@ export default function LemburClient({ data, currentParams }: LemburClientProps)
     setIsSubmitting(false);
     if (res.success) {
       setModalType(null);
-      alert(res.message);
+      showAlert(res.message, "success");
     } else {
-      alert(res.message || "Terjadi kesalahan");
+      showAlert(res.message || "Terjadi kesalahan", "error");
     }
   };
 
@@ -347,7 +349,7 @@ export default function LemburClient({ data, currentParams }: LemburClientProps)
                   const val = (document.getElementById("hcNotesInput") as HTMLInputElement)?.value;
                   if (!val.trim()) {
                     e.preventDefault();
-                    alert("Catatan wajib diisi jika Reject.");
+                    showAlert("Catatan wajib diisi jika Reject.", "warning");
                   }
                 }} className="px-6 py-2 bg-rose-600 text-white rounded-xl font-bold">Reject</button>
                 <button type="submit" name="hc_action" value="approve" className="px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold">Approve</button>

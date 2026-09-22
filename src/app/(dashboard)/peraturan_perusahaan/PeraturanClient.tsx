@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { uploadPeraturan, deletePeraturan } from "@/app/actions/peraturan";
+import { useAlert } from "@/components/AlertProvider";
 import type { DocItem } from "./page";
 
 function fmtSize(bytes: number | null) {
@@ -27,6 +28,7 @@ export default function PeraturanClient({
   viewFile: string;
 }) {
   const router = useRouter();
+  const { showAlert } = useAlert();
 
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -59,7 +61,7 @@ export default function PeraturanClient({
     const result = await deletePeraturan(formData);
 
     if (result?.error) {
-      alert(result.error);
+      showAlert(result.error, "error");
     } else {
       router.refresh();
     }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatRupiah, hitungPenyusutan, hitungJadwalPerawatan, type StatusPerawatan } from "@/lib/asetUtils";
 import { deleteAset } from "@/app/actions/aset";
+import { useAlert } from "@/components/AlertProvider";
 import AsetFormModal, { emptyAsetForm, KATEGORI_OPTIONS, type AsetFormValues } from "./AsetFormModal";
 import AsetCharts from "./AsetCharts";
 import SudahDirawatModal from "./SudahDirawatModal";
@@ -39,6 +40,7 @@ const PERAWATAN_BADGE: Record<StatusPerawatan, string> = {
 
 export default function InventarisClient({ items }: { items: AsetItem[] }) {
   const router = useRouter();
+  const { showAlert } = useAlert();
 
   const [view, setView] = useState<"aset" | "perawatan">("aset");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -114,7 +116,7 @@ export default function InventarisClient({ items }: { items: AsetItem[] }) {
     formData.set("id", String(id));
     const result = await deleteAset(formData);
     if (result?.error) {
-      alert(result.error);
+      showAlert(result.error, "error");
     } else {
       router.refresh();
     }

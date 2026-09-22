@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { savePengumuman, deletePengumuman } from "@/app/actions/pengumuman";
+import { useAlert } from "@/components/AlertProvider";
 import type { PengumumanItem } from "./page";
 
 const emptyForm = { id: 0, judul: "", isi: "" };
 
 export default function PengumumanClient({ items }: { items: PengumumanItem[] }) {
   const router = useRouter();
+  const { showAlert } = useAlert();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,7 +57,7 @@ export default function PengumumanClient({ items }: { items: PengumumanItem[] })
     formData.set("id", String(id));
     const result = await deletePengumuman(formData);
     if (result?.error) {
-      alert(result.error);
+      showAlert(result.error, "error");
     } else {
       router.refresh();
     }

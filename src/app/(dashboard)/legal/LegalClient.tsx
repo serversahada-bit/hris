@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { uploadLegal, deleteLegal } from "@/app/actions/legal";
 import type { LegalDoc } from "./page";
+import { useAlert } from "@/components/AlertProvider";
 
 const KATEGORI_OPTIONS = ["Kontrak", "Izin Usaha", "Perjanjian", "Sertifikat", "Lainnya"];
 const SOON_DAYS = 30;
@@ -67,6 +68,7 @@ export default function LegalClient({
   viewFile: string;
 }) {
   const router = useRouter();
+  const { showAlert } = useAlert();
 
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadMsg, setUploadMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -99,7 +101,7 @@ export default function LegalClient({
     const result = await deleteLegal(formData);
 
     if (result?.error) {
-      alert(result.error);
+      showAlert(result.error, "error");
     } else {
       router.refresh();
     }

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { setAtasanLangsung } from "@/app/actions/struktur";
+import { useAlert } from "@/components/AlertProvider";
 
 export default function StrukturClient({
   karyawanList,
@@ -10,6 +11,7 @@ export default function StrukturClient({
   karyawanList: any[];
   managerOptions: any[];
 }) {
+  const { showAlert } = useAlert();
   const [isPending, startTransition] = useTransition();
   const [activeId, setActiveId] = useState<number | null>(null);
 
@@ -30,7 +32,7 @@ export default function StrukturClient({
       if (res.success) {
         // Success animation or toast can go here
       } else {
-        alert(res.message);
+        showAlert(res.message, "error");
       }
       setActiveId(null);
     });

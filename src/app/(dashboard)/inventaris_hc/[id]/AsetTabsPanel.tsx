@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { formatRupiah } from "@/lib/asetUtils";
 import { deleteAsetRiwayat } from "@/app/actions/asetRiwayat";
 import { deleteAsetKeuangan } from "@/app/actions/asetKeuangan";
+import { useAlert } from "@/components/AlertProvider";
 import RiwayatFormModal from "./RiwayatFormModal";
 import KeuanganFormModal from "./KeuanganFormModal";
 import type { RiwayatItem, KeuanganItem } from "./page";
@@ -30,6 +31,7 @@ export default function AsetTabsPanel({
   keuangan: KeuanganItem[];
 }) {
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [tab, setTab] = useState<Tab>("riwayat");
 
   const [riwayatModal, setRiwayatModal] = useState<{ open: boolean; item: RiwayatItem | null }>({ open: false, item: null });
@@ -51,7 +53,7 @@ export default function AsetTabsPanel({
     formData.set("id", String(id));
     formData.set("aset_id", String(asetId));
     const result = await deleteAsetRiwayat(formData);
-    if (result?.error) alert(result.error);
+    if (result?.error) showAlert(result.error, "error");
     else router.refresh();
     setDeletingId(null);
   };
@@ -63,7 +65,7 @@ export default function AsetTabsPanel({
     formData.set("id", String(id));
     formData.set("aset_id", String(asetId));
     const result = await deleteAsetKeuangan(formData);
-    if (result?.error) alert(result.error);
+    if (result?.error) showAlert(result.error, "error");
     else router.refresh();
     setDeletingId(null);
   };

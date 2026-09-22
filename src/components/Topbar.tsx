@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { doLogout } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
+import { useAlert } from "@/components/AlertProvider";
 
 interface TopbarProps {
   toggleSidebar: () => void;
@@ -18,6 +19,7 @@ export default function Topbar({ toggleSidebar, openMobileSidebar, pendingIzinCo
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { showAlert } = useAlert();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -170,7 +172,7 @@ export default function Topbar({ toggleSidebar, openMobileSidebar, pendingIzinCo
               </button>
               <button 
                 onClick={() => {
-                  alert("Simulasi unggah berhasil! (Fitur backend belum tersedia)");
+                  showAlert("Simulasi unggah berhasil! (Fitur backend belum tersedia)", "success");
                   setIsUploadModalOpen(false);
                 }}
                 className="px-4 py-2 rounded-md text-sm font-medium text-white bg-[#3c50e0] hover:bg-blue-600 transition shadow-sm"

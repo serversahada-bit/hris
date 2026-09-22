@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { editKehadiran, toggleJenisJadwal } from "@/app/actions/kehadiran";
 import { employeeFotoUrl } from "@/lib/employeePhoto";
+import { useAlert } from "@/components/AlertProvider";
 
 export default function KehadiranClient({
   listTetap,
@@ -22,6 +23,7 @@ export default function KehadiranClient({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { showAlert } = useAlert();
   const [isPending, startTransition] = useTransition();
   const [mounted, setMounted] = useState(false);
 
@@ -57,7 +59,7 @@ export default function KehadiranClient({
     startTransition(async () => {
       const action = toStreamer ? 'add_streamer' : 'remove_streamer';
       const res = await toggleJenisJadwal(id, action);
-      if (!res.success) alert(res.message);
+      if (!res.success) showAlert(res.message, "error");
     });
   };
 
@@ -73,7 +75,7 @@ export default function KehadiranClient({
       if (res.success) {
         setEditModalData(null);
       } else {
-        alert(res.message);
+        showAlert(res.message, "error");
       }
     });
   };
@@ -86,11 +88,11 @@ export default function KehadiranClient({
       if (data.ok) {
         setDetailModalData({ loading: false, data });
       } else {
-        alert(data.msg);
+        showAlert(data.msg, "error");
         setDetailModalData(null);
       }
     } catch (err) {
-      alert("Error fetching detail");
+      showAlert("Error fetching detail", "error");
       setDetailModalData(null);
     }
   };

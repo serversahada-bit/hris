@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { upsertMengajiBaca, upsertMengajiIzin } from "@/app/actions/mengaji";
+import { useAlert } from "@/components/AlertProvider";
 
 type MengajiClientProps = {
   view: "ranking" | "daily";
@@ -21,6 +22,7 @@ export default function MengajiClient({ view, data, orgs, currentParams }: Menga
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { showAlert } = useAlert();
 
   // Modals state
   const [bacaModalOpen, setBacaModalOpen] = useState(false);
@@ -88,9 +90,9 @@ export default function MengajiClient({ view, data, orgs, currentParams }: Menga
     setIsSubmitting(false);
     if (res.success) {
       setBacaModalOpen(false);
-      alert(res.message);
+      showAlert(res.message, "success");
     } else {
-      alert(res.message || "Terjadi kesalahan.");
+      showAlert(res.message || "Terjadi kesalahan.", "error");
     }
   };
 
@@ -102,9 +104,9 @@ export default function MengajiClient({ view, data, orgs, currentParams }: Menga
     setIsSubmitting(false);
     if (res.success) {
       setIzinModalOpen(false);
-      alert(res.message);
+      showAlert(res.message, "success");
     } else {
-      alert(res.message || "Terjadi kesalahan.");
+      showAlert(res.message || "Terjadi kesalahan.", "error");
     }
   };
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatRupiah, hitungPenyusutan, hitungJadwalPerawatan, type StatusPerawatan } from "@/lib/asetUtils";
 import { deleteAset } from "@/app/actions/aset";
+import { useAlert } from "@/components/AlertProvider";
 import AsetFormModal, { asetToFormValues } from "../AsetFormModal";
 import SudahDirawatModal from "../SudahDirawatModal";
 import AsetTabsPanel from "./AsetTabsPanel";
@@ -70,6 +71,7 @@ export default function AsetDetailClient({
   qrUrl: string;
 }) {
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDirawatModalOpen, setIsDirawatModalOpen] = useState(false);
@@ -101,7 +103,7 @@ export default function AsetDetailClient({
     formData.set("id", String(item.id));
     const result = await deleteAset(formData);
     if (result?.error) {
-      alert(result.error);
+      showAlert(result.error, "error");
       setIsDeleting(false);
     } else {
       router.push("/inventaris_hc");

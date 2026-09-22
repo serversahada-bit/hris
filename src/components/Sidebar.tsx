@@ -1,21 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 interface SidebarProps {
   pendingIzinCount: number;
-  pendingLegalitasCount: number;
   isCollapsed?: boolean;
 }
 
-const GA_PATHS = ["/legal", "/pengumuman_hc", "/inventaris_hc"];
-
-export default function Sidebar({ pendingIzinCount, pendingLegalitasCount, isCollapsed = false }: SidebarProps) {
+export default function Sidebar({ pendingIzinCount, isCollapsed = false }: SidebarProps) {
   const pathname = usePathname();
-  const [isGaOpen, setIsGaOpen] = useState(() => GA_PATHS.some((p) => pathname.includes(p)));
 
   const menuClassLight = (menuPaths: string[]) => {
     const isActive = menuPaths.some((p) => {
@@ -132,30 +127,6 @@ export default function Sidebar({ pendingIzinCount, pendingLegalitasCount, isCol
           {!isCollapsed && <span className="text-[15px] whitespace-nowrap flex-1">Lembur</span>}
         </Link>
 
-        <Link href="/legalitas" className={linkClass(["/legalitas"])}>
-          <span className={`material-symbols-outlined text-[20px] ${iconClassLight(["/legalitas"])} relative`}>
-            verified
-            {isCollapsed && pendingLegalitasCount > 0 && (
-              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-[#3c50e0]"></span>
-            )}
-          </span>
-          {!isCollapsed && (
-            <>
-              <span className="text-[15px] whitespace-nowrap flex-1">Legalitas</span>
-              {pendingLegalitasCount > 0 && (
-                <span className="h-5 w-5 rounded bg-[#3c50e0] text-white flex items-center justify-center text-[11px] font-bold">
-                  {pendingLegalitasCount}
-                </span>
-              )}
-            </>
-          )}
-        </Link>
-
-        <Link href="/notifikasi" className={linkClass(["/notifikasi"])}>
-          <span className={`material-symbols-outlined text-[20px] ${iconClassLight(["/notifikasi"])}`}>notifications</span>
-          {!isCollapsed && <span className="text-[15px] whitespace-nowrap">Notifikasi</span>}
-        </Link>
-
         {/* Settings Group */}
         <Link
           href="/settings"
@@ -178,47 +149,25 @@ export default function Sidebar({ pendingIzinCount, pendingLegalitasCount, isCol
           {!isCollapsed && <span className="text-[15px] whitespace-nowrap">Aturan Perusahaan</span>}
         </Link>
 
-        {/* General Affair Group */}
-        {isCollapsed ? (
-          <Link href="/legal" className={linkClass(GA_PATHS)} title="General Affair">
-            <span className={`material-symbols-outlined text-[20px] ${iconClassLight(GA_PATHS)}`}>corporate_fare</span>
-          </Link>
-        ) : (
-          <>
-            <button
-              type="button"
-              onClick={() => setIsGaOpen((v) => !v)}
-              className="w-full flex items-center justify-between gap-3 px-4 py-2.5 mb-1 rounded-sm transition-colors text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700/50 hover:text-slate-700 dark:hover:text-slate-200 font-medium"
-            >
-              <span className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-[20px] text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-300 transition-colors">corporate_fare</span>
-                <span className="text-[15px] whitespace-nowrap">General Affair</span>
-              </span>
-              <span
-                className={`material-symbols-outlined text-[18px] transition-transform duration-200 ${isGaOpen ? "rotate-180" : ""}`}
-              >
-                expand_more
-              </span>
-            </button>
+        <Link href="/legal" className={linkClass(["/legal"])}>
+          <span className={`material-symbols-outlined text-[20px] ${iconClassLight(["/legal"])}`}>balance</span>
+          {!isCollapsed && <span className="text-[15px] whitespace-nowrap">Legal</span>}
+        </Link>
 
-            {isGaOpen && (
-              <div className="ml-4 pl-4 mb-1 border-l border-slate-200 dark:border-slate-700 flex flex-col">
-                <Link href="/legal" className={linkClass(["/legal"])}>
-                  <span className={`material-symbols-outlined text-[18px] ${iconClassLight(["/legal"])}`}>balance</span>
-                  <span className="text-[14px] whitespace-nowrap">Legal</span>
-                </Link>
-                <Link href="/pengumuman_hc" className={linkClass(["/pengumuman_hc"])}>
-                  <span className={`material-symbols-outlined text-[18px] ${iconClassLight(["/pengumuman_hc"])}`}>campaign</span>
-                  <span className="text-[14px] whitespace-nowrap">Pengumuman HC</span>
-                </Link>
-                <Link href="/inventaris_hc" className={linkClass(["/inventaris_hc"])}>
-                  <span className={`material-symbols-outlined text-[18px] ${iconClassLight(["/inventaris_hc"])}`}>inventory_2</span>
-                  <span className="text-[14px] whitespace-nowrap">Inventaris HC</span>
-                </Link>
-              </div>
-            )}
-          </>
-        )}
+        <Link href="/pengumuman_hc" className={linkClass(["/pengumuman_hc"])}>
+          <span className={`material-symbols-outlined text-[20px] ${iconClassLight(["/pengumuman_hc"])}`}>campaign</span>
+          {!isCollapsed && <span className="text-[15px] whitespace-nowrap">Pengumuman HC</span>}
+        </Link>
+
+        <Link href="/inventaris_hc" className={linkClass(["/inventaris_hc"])}>
+          <span className={`material-symbols-outlined text-[20px] ${iconClassLight(["/inventaris_hc"])}`}>inventory_2</span>
+          {!isCollapsed && <span className="text-[15px] whitespace-nowrap">Inventaris HC</span>}
+        </Link>
+
+        <Link href="/ruang_meeting" className={linkClass(["/ruang_meeting"])}>
+          <span className={`material-symbols-outlined text-[20px] ${iconClassLight(["/ruang_meeting"])}`}>meeting_room</span>
+          {!isCollapsed && <span className="text-[15px] whitespace-nowrap">Ruang Meeting</span>}
+        </Link>
 
         <div className="mt-auto pt-8">
           <Link

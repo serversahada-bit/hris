@@ -13,7 +13,6 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   let pendingIzinCount = 0;
-  let pendingLegalitasCount = 0;
 
   // Read username from cookie if available, fallback to HC Nurul
   const cookieStore = await cookies();
@@ -31,19 +30,8 @@ export default async function DashboardLayout({
     pendingIzinCount = 0;
   }
 
-  try {
-    const [rows]: any = await db.query(
-      `SELECT COUNT(*) AS c FROM pengajuan_legalitas WHERE status = 'Pending'`
-    );
-    if (rows && rows.length > 0) {
-      pendingLegalitasCount = rows[0].c;
-    }
-  } catch (error) {
-    pendingLegalitasCount = 0;
-  }
-
   return (
-    <DashboardLayoutClient pendingIzinCount={pendingIzinCount} pendingLegalitasCount={pendingLegalitasCount} userName={userName}>
+    <DashboardLayoutClient pendingIzinCount={pendingIzinCount} userName={userName}>
       {children}
     </DashboardLayoutClient>
   );

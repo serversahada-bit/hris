@@ -9,6 +9,7 @@ import {
   forceApproveManagerIzin,
   updatePengajuanIzin,
 } from "@/app/actions/izin";
+import { useAlert } from "@/components/AlertProvider";
 
 type StatusFilter = "Menunggu Manager" | "Pending" | "Disetujui" | "Ditolak" | "Semua";
 
@@ -73,6 +74,7 @@ export default function IzinClient({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { showAlert } = useAlert();
   const [isPending, startTransition] = useTransition();
   const [detailRow, setDetailRow] = useState<IzinRow | null>(null);
   const [editRow, setEditRow] = useState<IzinRow | null>(null);
@@ -116,7 +118,7 @@ export default function IzinClient({
       setEditRow(null);
       refreshAfterAction();
     }
-    alert(result.message);
+    showAlert(result.message, result.success ? "success" : "error");
   };
 
   const handleApprove = (row: IzinRow) => {
@@ -129,7 +131,7 @@ export default function IzinClient({
         setActionRow(null);
         refreshAfterAction();
       }
-      alert(result.message);
+      showAlert(result.message, result.success ? "success" : "error");
     });
   };
 
@@ -146,7 +148,7 @@ export default function IzinClient({
         setRejectReason("");
         refreshAfterAction();
       }
-      alert(result.message);
+      showAlert(result.message, result.success ? "success" : "error");
     });
   };
 
@@ -160,7 +162,7 @@ export default function IzinClient({
         setDeleteRow(null);
         refreshAfterAction();
       }
-      alert(result.message);
+      showAlert(result.message, result.success ? "success" : "error");
     });
   };
 
@@ -174,7 +176,7 @@ export default function IzinClient({
         setManagerRow(null);
         refreshAfterAction();
       }
-      alert(result.message);
+      showAlert(result.message, result.success ? "success" : "error");
     });
   };
 
