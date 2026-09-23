@@ -92,7 +92,9 @@ export async function GET(request: Request) {
       const [presensiRows]: any = await db.query(sqlP, [expStart, expEnd, ...empIds]);
       
       presensiRows.forEach((p: any) => {
-        const t = String(p.tanggal);
+        const t = (p.tanggal instanceof Date)
+          ? `${p.tanggal.getFullYear()}-${String(p.tanggal.getMonth() + 1).padStart(2, '0')}-${String(p.tanggal.getDate()).padStart(2, '0')}`
+          : String(p.tanggal);
         const k = Number(p.karyawan_id);
         if (!presensiMap[t]) presensiMap[t] = {};
         presensiMap[t][k] = p;
