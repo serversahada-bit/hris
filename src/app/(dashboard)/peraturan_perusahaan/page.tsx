@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { stat } from "fs/promises";
 import path from "path";
 import db from "@/lib/db";
+import { PERATURAN_UPLOAD_DIR } from "@/lib/peraturanUploads";
 import PeraturanClient from "./PeraturanClient";
 
 export const metadata = {
@@ -12,7 +13,7 @@ export const metadata = {
 
 export const revalidate = 0;
 
-const UPLOAD_DIR_FS = path.join(process.cwd(), "public", "uploads", "peraturan");
+const UPLOAD_DIR_FS = PERATURAN_UPLOAD_DIR;
 
 type DocRow = {
   id: number;
@@ -104,7 +105,7 @@ export default async function PeraturanPerusahaanPage({
           id: row.id,
           judul: row.judul || file,
           file,
-          url: `/uploads/peraturan/${encodeURIComponent(file)}`,
+          url: `/api/peraturan-uploads/${encodeURIComponent(file)}`,
           date: formatDate(row.uploaded_at),
           size,
         };

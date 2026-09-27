@@ -6,8 +6,9 @@ import { revalidatePath } from "next/cache";
 import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 import { MAX_PDF_BYTES, isPdfBuffer, isPdfExtension, stampedFilename } from "@/lib/uploads";
+import { PERATURAN_UPLOAD_DIR } from "@/lib/peraturanUploads";
 
-const UPLOAD_DIR_FS = path.join(process.cwd(), "public", "uploads", "peraturan");
+const UPLOAD_DIR_FS = PERATURAN_UPLOAD_DIR;
 
 async function getCurrentAdminId() {
   const cookieStore = await cookies();
