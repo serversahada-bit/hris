@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import db from "@/lib/db";
+import CutiTahunanClient, { type CutiRow } from "./CutiTahunanClient";
 
 export const metadata = {
   title: "Data Cuti - Great HRIS",
@@ -24,6 +25,13 @@ type LeaveRow = {
   mulai_tanggal: string | null;
   sampai_tanggal: string | null;
   durasi_hari: number | string | null;
+};
+
+type PenyesuaianRow = {
+  karyawan_id: number | null;
+  penyesuaian_hari: number | string | null;
+  terpakai_override: number | string | null;
+  catatan: string | null;
 };
 
 function normalizeYear(value?: string) {
@@ -156,91 +164,52 @@ export default async function CutiTahunanPage({
     console.error("Failed to fetch approved leave usage:", error);
   }
 
-  return (
-    <div className="w-full flex flex-col gap-6 text-slate-800 dark:text-slate-200">
-      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Cuti Tahunan</h1>
-        </div>
+  const penyesuaianByEmployee = new Map<number, { hari: number; terpakaiOverride: number | null; catatan: string | null }>();
 
-        <form className="rounded-3xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm p-4 flex gap-3 items-end">
-          <div className="w-44">
-            <label className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Tahun</label>
-            <input
-              type="number"
-              name="year"
-              defaultValue={year}
-              min="2000"
-              max="2100"
-              className="mt-2 w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-300 transition"
-            />
-          </div>
-          <button
-            type="submit"
-            className="h-11 px-6 rounded-2xl font-extrabold text-white bg-gradient-to-r from-brand-700 to-brand-500 hover:opacity-95 transition"
-          >
-            Tampilkan
-          </button>
-        </form>
-      </div>
+  try {
+    const [penyesuaianRows] = await db.query(
+      `SELECT karyawan_id, penyesuaian_hari, terpakai_override, catatan
+       FROM cuti_penyesuaian
+       WHERE tahun = ?`,
+      [year]
+    );
 
-      <section className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-200/50 dark:border-slate-700 overflow-hidden">
-        <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-          <div className="font-extrabold text-slate-900 dark:text-white">Rekap Jatah Cuti {year}</div>
-        </div>
+    for (const row of penyesuaianRows as PenyesuaianRow[]) {
+      const employeeId = Number(row.karyawan_id);
+      if (!employeeId) continue;
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left whitespace-nowrap">
-            <thead className="bg-slate-50/70 dark:bg-slate-900/50 text-slate-600 dark:text-slate-300 border-b border-slate-100 dark:border-slate-700">
-              <tr className="h-12">
-                <th className="px-6 text-[11px] font-extrabold uppercase tracking-[0.22em]">Karyawan</th>
-                <th className="px-6 text-[11px] font-extrabold uppercase tracking-[0.22em]">Jabatan</th>
-                <th className="px-6 text-[11px] font-extrabold uppercase tracking-[0.22em]">Tgl Bergabung</th>
-                <th className="px-6 text-[11px] font-extrabold uppercase tracking-[0.22em] text-center">Jatah</th>
-                <th className="px-6 text-[11px] font-extrabold uppercase tracking-[0.22em] text-center">Terpakai</th>
-                <th className="px-6 text-[11px] font-extrabold uppercase tracking-[0.22em] text-center">Sisa</th>
-              </tr>
-            </thead>
+      const hari = Number(row.penyesuaian_hari);
+      const terpakaiOverrideValue =
+        row.terpakai_override === null || row.terpakai_override === undefined
+          ? null
+          : Number(row.terpakai_override);
 
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-700 bg-white dark:bg-slate-800">
-              {employees.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">Tidak ada karyawan.</td>
-                </tr>
-              ) : (
-                employees.map((employee) => {
-                  const quota = jatahCutiTahunan(employee.tanggal_bergabung, year);
-                  const used = usedByEmployee.get(employee.id) ?? 0;
-                  const remaining = Math.max(0, quota - used);
+      penyesuaianByEmployee.set(employeeId, {
+        hari: Number.isFinite(hari) ? hari : 0,
+        terpakaiOverride:
+          terpakaiOverrideValue !== null && Number.isFinite(terpakaiOverrideValue) ? terpakaiOverrideValue : null,
+        catatan: row.catatan,
+      });
+    }
+  } catch (error) {
+    console.error("Failed to fetch cuti penyesuaian:", error);
+  }
 
-                  return (
-                    <tr key={employee.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
-                      <td className="px-6 py-4">
-                        <div className="font-extrabold text-slate-900 dark:text-white">{employee.nama || "-"}</div>
-                        <div className="text-xs text-slate-500 dark:text-slate-400 font-semibold">ID: {employee.id}</div>
-                      </td>
-                      <td className="px-6 py-4 text-slate-700 dark:text-slate-300 font-semibold">{employee.jabatan || "-"}</td>
-                      <td className="px-6 py-4 text-slate-700 dark:text-slate-300 font-semibold">{formatDateDisplay(employee.tanggal_bergabung)}</td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 border border-brand-100 dark:border-brand-800/40">
-                          {quota}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-center font-extrabold text-rose-700 dark:text-rose-400">{used}</td>
-                      <td className="px-6 py-4 text-center font-extrabold text-emerald-700 dark:text-emerald-400">{remaining}</td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+  const rows: CutiRow[] = employees.map((employee) => {
+    const penyesuaian = penyesuaianByEmployee.get(employee.id);
 
-        <div className="px-6 py-4 text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30 flex justify-between items-center">
-          <span>Jika cuti lintas tahun, hari akan di-clamp ke tahun terpilih.</span>
-          <span className="hidden sm:inline">Gunakan filter Tahun untuk melihat rekap.</span>
-        </div>
-      </section>
-    </div>
-  );
+    return {
+      id: employee.id,
+      nama: employee.nama,
+      jabatan: employee.jabatan,
+      tanggalBergabung: formatDateDisplay(employee.tanggal_bergabung),
+      jatahDasar: jatahCutiTahunan(employee.tanggal_bergabung, year),
+      penyesuaianHari: penyesuaian?.hari ?? 0,
+      catatan: penyesuaian?.catatan ?? null,
+      usedComputed: usedByEmployee.get(employee.id) ?? 0,
+      usedOverride: penyesuaian?.terpakaiOverride ?? null,
+    };
+  });
+
+  return <CutiTahunanClient rows={rows} year={year} />;
 }
