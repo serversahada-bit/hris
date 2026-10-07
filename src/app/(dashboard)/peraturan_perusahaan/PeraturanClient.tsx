@@ -213,6 +213,11 @@ export default function PeraturanClient({
                   <div className="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">
                     {d.file} • {d.date} • {fmtSize(d.size)}
                   </div>
+                  {d.pengaju && (
+                    <div className="text-xs text-brand-700 dark:text-brand-300 font-semibold mt-1 truncate">
+                      Diajukan oleh: {d.pengaju}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 justify-end">
