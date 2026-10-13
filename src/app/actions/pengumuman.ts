@@ -6,10 +6,22 @@ import { revalidatePath } from "next/cache";
 import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 import { safeFilename, stampedFilename } from "@/lib/uploads";
+import { ensurePengumumanTable } from "@/lib/pengumumanDb";
+import { PENGUMUMAN_UPLOAD_DIR } from "@/lib/pengumumanUploads";
+import { PushBroadcastError, sendPushBroadcast } from "@/lib/push";
 
-const UPLOAD_DIR_FS = path.join(process.cwd(), "public", "uploads", "pengumuman");
+const UPLOAD_DIR_FS = PENGUMUMAN_UPLOAD_DIR;
 const MAX_BYTES = 10 * 1024 * 1024;
 const ALLOWED_EXT = [".pdf", ".jpg", ".jpeg", ".png", ".webp"];
+
+const PUSH_BODY_MAX = 120;
+
+function formatTanggalPush(value: string) {
+  const [y, m, d] = value.split("-").map(Number);
+  return new Intl.DateTimeFormat("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(
+    new Date(Date.UTC(y, m - 1, d))
+  );
+}
 
 async function getCurrentAdminId() {
   const cookieStore = await cookies();
@@ -26,9 +38,11 @@ export async function savePengumuman(formData: FormData) {
   const id = Number(formData.get("id") ?? 0);
   const judul = String(formData.get("judul") ?? "").trim();
   const isi = String(formData.get("isi") ?? "").trim();
+  const tanggalPelaksanaan = String(formData.get("tanggal_pelaksanaan") ?? "").trim();
 
   if (!judul) return { error: "Judul wajib diisi." };
   if (!isi) return { error: "Isi pengumuman wajib diisi." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(tanggalPelaksanaan)) return { error: "Tanggal pelaksanaan wajib diisi." };
 
   let newFileName: string | null = null;
   const file = formData.get("lampiran");
@@ -57,7 +71,11 @@ export async function savePengumuman(formData: FormData) {
     }
   }
 
+  let isNew = false;
+
   try {
+    await ensurePengumumanTable();
+
     if (id > 0) {
       let oldFile: string | null = null;
       if (newFileName) {
@@ -68,8 +86,8 @@ export async function savePengumuman(formData: FormData) {
 
       if (newFileName) {
         await db.query(
-          "UPDATE pengumuman_hc SET judul=?, isi=?, lampiran=?, updated_at=NOW() WHERE id=?",
-          [judul, isi, newFileName, id]
+          "UPDATE pengumuman_hc SET judul=?, isi=?, lampiran=?, tanggal_pelaksanaan=?, updated_at=NOW() WHERE id=?",
+          [judul, isi, newFileName, tanggalPelaksanaan, id]
         );
         if (oldFile) {
           try {
@@ -80,24 +98,42 @@ export async function savePengumuman(formData: FormData) {
         }
       } else {
         await db.query(
-          "UPDATE pengumuman_hc SET judul=?, isi=?, updated_at=NOW() WHERE id=?",
-          [judul, isi, id]
+          "UPDATE pengumuman_hc SET judul=?, isi=?, tanggal_pelaksanaan=?, updated_at=NOW() WHERE id=?",
+          [judul, isi, tanggalPelaksanaan, id]
         );
       }
     } else {
       await db.query(
-        "INSERT INTO pengumuman_hc (judul, isi, lampiran, created_by) VALUES (?, ?, ?, ?)",
-        [judul, isi, newFileName, adminId]
+        "INSERT INTO pengumuman_hc (judul, isi, lampiran, tanggal_pelaksanaan, created_by) VALUES (?, ?, ?, ?, ?)",
+        [judul, isi, newFileName, tanggalPelaksanaan, adminId]
       );
+      isNew = true;
     }
 
     revalidatePath("/pengumuman_hc");
-    return { success: true };
   } catch (error) {
     console.error("Failed to save pengumuman:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
     return { error: `Gagal menyimpan pengumuman: ${message}` };
   }
+
+  // Push hanya untuk pengumuman baru. Pengumuman tetap tersimpan walau push gagal.
+  if (isNew) {
+    const ringkas = isi.length > PUSH_BODY_MAX ? `${isi.slice(0, PUSH_BODY_MAX).trimEnd()}…` : isi;
+    try {
+      await sendPushBroadcast({
+        title: `📢 ${judul}`,
+        body: `${formatTanggalPush(tanggalPelaksanaan)}\n${ringkas}`,
+        url: "/dashboard",
+      });
+    } catch (error) {
+      console.error("[Pengumuman] Gagal mengirim push:", error);
+      const message = error instanceof PushBroadcastError ? error.message : "Gagal mengirim notifikasi.";
+      return { success: true, pushWarning: `Pengumuman tersimpan, tapi notifikasi tidak terkirim. ${message}` };
+    }
+  }
+
+  return { success: true };
 }
 
 export async function deletePengumuman(formData: FormData) {

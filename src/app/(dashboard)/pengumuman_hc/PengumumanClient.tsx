@@ -6,7 +6,7 @@ import { savePengumuman, deletePengumuman } from "@/app/actions/pengumuman";
 import { useAlert } from "@/components/AlertProvider";
 import type { PengumumanItem } from "./page";
 
-const emptyForm = { id: 0, judul: "", isi: "" };
+const emptyForm = { id: 0, judul: "", isi: "", tanggal: "" };
 
 export default function PengumumanClient({ items }: { items: PengumumanItem[] }) {
   const router = useRouter();
@@ -27,7 +27,7 @@ export default function PengumumanClient({ items }: { items: PengumumanItem[] })
   };
 
   const openEdit = (item: PengumumanItem) => {
-    setForm({ id: item.id, judul: item.judul, isi: item.isi });
+    setForm({ id: item.id, judul: item.judul, isi: item.isi, tanggal: item.tanggalPelaksanaan ?? "" });
     setEditingLampiran(item.lampiranUrl);
     setFormError("");
     setIsModalOpen(true);
@@ -46,6 +46,11 @@ export default function PengumumanClient({ items }: { items: PengumumanItem[] })
     } else {
       setIsModalOpen(false);
       router.refresh();
+      if ("pushWarning" in result && result.pushWarning) {
+        showAlert(result.pushWarning, "warning");
+      } else if (!form.id) {
+        showAlert("Pengumuman tersimpan dan notifikasi terkirim ke karyawan.", "success");
+      }
     }
     setIsSubmitting(false);
   };
@@ -69,7 +74,7 @@ export default function PengumumanClient({ items }: { items: PengumumanItem[] })
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Pengumuman HC</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Broadcast pengumuman HC ke seluruh karyawan.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">Broadcast pengumuman HC ke seluruh karyawan. 5 agenda terdekat tampil di dashboard Great, di atas Timeline.</p>
         </div>
         <button
           onClick={openCreate}
@@ -94,6 +99,10 @@ export default function PengumumanClient({ items }: { items: PengumumanItem[] })
               <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-700 flex items-start justify-between gap-4">
                 <div className="min-w-0">
                   <div className="font-extrabold text-slate-900 dark:text-white text-lg">{item.judul}</div>
+                  <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-brand-700 dark:text-brand-400">
+                    <span className="material-symbols-outlined text-base">event</span>
+                    {item.tanggalPelaksanaanLabel ?? "Tanggal pelaksanaan belum diisi"}
+                  </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     {item.updatedAt ? `Diperbarui: ${item.updatedAt}` : `Diposting: ${item.createdAt}`}
                   </div>
@@ -161,6 +170,18 @@ export default function PengumumanClient({ items }: { items: PengumumanItem[] })
                   value={form.judul}
                   onChange={(e) => setForm({ ...form, judul: e.target.value })}
                   placeholder="Contoh: Libur Hari Kemerdekaan"
+                  className="mt-2 w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-300 transition"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-extrabold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400">Tanggal Pelaksanaan</label>
+                <input
+                  type="date"
+                  name="tanggal_pelaksanaan"
+                  required
+                  value={form.tanggal}
+                  onChange={(e) => setForm({ ...form, tanggal: e.target.value })}
                   className="mt-2 w-full h-11 px-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm outline-none focus:ring-4 focus:ring-brand-500/10 focus:border-brand-300 transition"
                 />
               </div>
