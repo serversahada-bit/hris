@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import db from "@/lib/db";
+import { ensurePengumumanTable } from "@/lib/pengumumanDb";
 import PengumumanClient from "./PengumumanClient";
 
 export const metadata = {
@@ -15,6 +16,7 @@ type PengumumanRow = {
   judul: string;
   isi: string;
   lampiran: string | null;
+  tanggal_pelaksanaan: string | null;
   created_at: string | Date;
   updated_at: string | Date | null;
 };
@@ -25,6 +27,8 @@ export type PengumumanItem = {
   isi: string;
   lampiran: string | null;
   lampiranUrl: string | null;
+  tanggalPelaksanaan: string | null;
+  tanggalPelaksanaanLabel: string | null;
   createdAt: string;
   updatedAt: string | null;
 };
@@ -39,6 +43,15 @@ function formatDate(value: string | Date | null) {
   return `${datePart} ${timePart}`;
 }
 
+function formatTanggal(value: string | null) {
+  if (!value) return null;
+  const [y, m, d] = value.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  return new Intl.DateTimeFormat("id-ID", { weekday: "long", day: "2-digit", month: "long", year: "numeric", timeZone: "UTC" }).format(
+    new Date(Date.UTC(y, m - 1, d))
+  );
+}
+
 export default async function PengumumanHcPage() {
   const cookieStore = await cookies();
   if (!cookieStore.get("admin_id")?.value) {
@@ -48,21 +61,11 @@ export default async function PengumumanHcPage() {
   let items: PengumumanItem[] = [];
 
   try {
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS pengumuman_hc (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        judul VARCHAR(255) NOT NULL,
-        isi TEXT NOT NULL,
-        lampiran VARCHAR(255) NULL,
-        created_by INT NULL,
-        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME NULL,
-        INDEX (created_at)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    `);
+    await ensurePengumumanTable();
 
     const [rows] = await db.query(
-      "SELECT id, judul, isi, lampiran, created_at, updated_at FROM pengumuman_hc ORDER BY created_at DESC"
+      `SELECT id, judul, isi, lampiran, DATE_FORMAT(tanggal_pelaksanaan, '%Y-%m-%d') AS tanggal_pelaksanaan, created_at, updated_at
+       FROM pengumuman_hc ORDER BY created_at DESC`
     );
 
     items = (rows as PengumumanRow[]).map((row) => ({
@@ -70,7 +73,9 @@ export default async function PengumumanHcPage() {
       judul: row.judul,
       isi: row.isi,
       lampiran: row.lampiran,
-      lampiranUrl: row.lampiran ? `/uploads/pengumuman/${encodeURIComponent(row.lampiran)}` : null,
+      lampiranUrl: row.lampiran ? `/api/pengumuman-uploads/${encodeURIComponent(row.lampiran)}` : null,
+      tanggalPelaksanaan: row.tanggal_pelaksanaan,
+      tanggalPelaksanaanLabel: formatTanggal(row.tanggal_pelaksanaan),
       createdAt: formatDate(row.created_at) ?? "-",
       updatedAt: formatDate(row.updated_at),
     }));
