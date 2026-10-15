@@ -1,21 +1,18 @@
+import { addDaysYmd, todayYmd, toYmd } from "@/lib/timezone";
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const karyawanId = parseInt(searchParams.get('karyawan_id') || '0', 10);
-  const tgl = searchParams.get('tanggal') || new Date().toISOString().split('T')[0];
+  const tgl = searchParams.get('tanggal') || todayYmd();
 
   if (karyawanId <= 0 || !/^\d{4}-\d{2}-\d{2}$/.test(tgl)) {
     return NextResponse.json({ ok: false, msg: 'Input tidak valid.' }, { status: 400 });
   }
 
-  const endDate = new Date(tgl);
-  const startDate = new Date(endDate);
-  startDate.setDate(startDate.getDate() - 29);
-  
-  const end = endDate.toISOString().split('T')[0];
-  const start = startDate.toISOString().split('T')[0];
+  const end = tgl;
+  const start = addDaysYmd(tgl, -29);
 
   try {
     const [empRes]: any = await db.query(
@@ -34,8 +31,8 @@ export async function GET(request: Request) {
     `, [karyawanId, start, end]);
 
     const formattedRows = rows.map((r: any) => ({
-      tanggal: (r.tanggal instanceof Date) 
-        ? `${r.tanggal.getFullYear()}-${String(r.tanggal.getMonth() + 1).padStart(2, '0')}-${String(r.tanggal.getDate()).padStart(2, '0')}`
+      tanggal: (r.tanggal instanceof Date)
+        ? toYmd(r.tanggal)
         : String(r.tanggal),
       jam_masuk: r.jam_masuk ? String(r.jam_masuk).substring(0, 5) : '',
       jam_pulang: r.jam_pulang ? String(r.jam_pulang).substring(0, 5) : '',

@@ -1,5 +1,6 @@
 "use client";
 
+import { APP_TIMEZONE, diffDaysYmd, normalizeYmd, todayYmd } from "@/lib/timezone";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { uploadLegal, deleteLegal } from "@/app/actions/legal";
@@ -14,12 +15,10 @@ type Status = "tanpa_kadaluarsa" | "aktif" | "akan_habis" | "kadaluarsa";
 function getStatus(tanggalKadaluarsa: string | null): Status {
   if (!tanggalKadaluarsa) return "tanpa_kadaluarsa";
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(tanggalKadaluarsa);
-  target.setHours(0, 0, 0, 0);
+  const target = normalizeYmd(tanggalKadaluarsa);
+  if (!target) return "tanpa_kadaluarsa";
 
-  const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
+  const diffDays = diffDaysYmd(todayYmd(), target);
   if (diffDays < 0) return "kadaluarsa";
   if (diffDays <= SOON_DAYS) return "akan_habis";
   return "aktif";
@@ -51,7 +50,7 @@ function formatDateShort(value: string | null) {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric" }).format(date);
+  return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: APP_TIMEZONE }).format(date);
 }
 
 export default function LegalClient({

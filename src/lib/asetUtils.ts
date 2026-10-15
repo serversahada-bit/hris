@@ -1,3 +1,5 @@
+import { addDaysYmd, diffDaysYmd, normalizeYmd, todayYmd } from "./timezone";
+
 export function formatRupiah(value: number) {
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
@@ -77,24 +79,18 @@ export function hitungJadwalPerawatan(
     return { jadwalBerikutnya: null, status: null, sisaHari: null };
   }
 
-  const basisDate = new Date(basis);
-  if (Number.isNaN(basisDate.getTime())) {
+  const basisYmd = normalizeYmd(basis);
+  if (!basisYmd) {
     return { jadwalBerikutnya: null, status: null, sisaHari: null };
   }
 
-  const nextDate = new Date(basisDate);
-  nextDate.setDate(nextDate.getDate() + intervalHari);
-  nextDate.setHours(0, 0, 0, 0);
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const sisaHari = Math.round((nextDate.getTime() - today.getTime()) / 86400000);
+  const jadwalBerikutnya = addDaysYmd(basisYmd, intervalHari);
+  const sisaHari = diffDaysYmd(todayYmd(), jadwalBerikutnya);
 
   let status: StatusPerawatan;
   if (sisaHari < 0) status = "terlambat";
   else if (sisaHari <= PERAWATAN_DUE_SOON_DAYS) status = "segera";
   else status = "terjadwal";
 
-  return { jadwalBerikutnya: nextDate.toISOString().slice(0, 10), status, sisaHari };
+  return { jadwalBerikutnya, status, sisaHari };
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { toDbDateTime } from "@/lib/timezone";
 import { revalidatePath } from "next/cache";
 import db from "@/lib/db";
 import { cookies } from "next/headers";
@@ -84,8 +85,9 @@ export async function editLembur(formData: FormData) {
       return { success: false, message: "Jika status final REJECTED, catatan HC wajib diisi." };
     }
 
-    const mulaiDb = new Date(mulai).toISOString().slice(0, 19).replace("T", " ");
-    const selesaiDb = new Date(selesai).toISOString().slice(0, 19).replace("T", " ");
+    // Simpan sebagai jam dinding WIB (bukan UTC)
+    const mulaiDb = toDbDateTime(mulai);
+    const selesaiDb = toDbDateTime(selesai);
 
     if (finalStatus !== "") {
       await db.query(

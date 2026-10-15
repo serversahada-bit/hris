@@ -1,3 +1,4 @@
+import { todayYmd } from "@/lib/timezone";
 import db from "@/lib/db";
 import KehadiranClient from "./KehadiranClient";
 import { employeeFotoUrl } from "@/lib/employeePhoto";
@@ -8,7 +9,7 @@ export default async function KehadiranPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const params = await searchParams;
-  const tanggalPilih = typeof params.tanggal === "string" ? params.tanggal : new Date().toISOString().split("T")[0];
+  const tanggalPilih = typeof params.tanggal === "string" ? params.tanggal : todayYmd();
   const activeTab = typeof params.tab === "string" && params.tab === "streamer" ? "streamer" : "tetap";
 
   const colors = ['#c7d2fe', '#ddd6fe', '#e9d5ff', '#cbd5e1', '#a5b4fc', '#f5d0fe'];

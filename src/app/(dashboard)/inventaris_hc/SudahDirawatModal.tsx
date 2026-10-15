@@ -1,5 +1,6 @@
 "use client";
 
+import { todayYmd } from "@/lib/timezone";
 import { useState } from "react";
 import { markAsetDirawat } from "@/app/actions/aset";
 
@@ -8,7 +9,7 @@ const inputClass =
 const labelClass = "text-[11px] font-extrabold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400";
 
 function todayInputValue() {
-  return new Date().toISOString().slice(0, 10);
+  return todayYmd();
 }
 
 export default function SudahDirawatModal({

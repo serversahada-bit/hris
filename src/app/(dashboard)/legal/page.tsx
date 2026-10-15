@@ -1,3 +1,4 @@
+import { APP_TIMEZONE, toYmd } from "@/lib/timezone";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { stat } from "fs/promises";
@@ -40,7 +41,7 @@ export type LegalDoc = {
 
 function toDateInputValue(value: string | Date | null): string | null {
   if (!value) return null;
-  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (value instanceof Date) return toYmd(value);
   return String(value).slice(0, 10);
 }
 
@@ -49,8 +50,8 @@ function formatDate(value: string | Date | null) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
 
-  const datePart = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "long", year: "numeric" }).format(date);
-  const timePart = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false }).format(date);
+  const datePart = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "long", year: "numeric", timeZone: APP_TIMEZONE }).format(date);
+  const timePart = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: APP_TIMEZONE }).format(date);
   return `${datePart} ${timePart}`;
 }
 

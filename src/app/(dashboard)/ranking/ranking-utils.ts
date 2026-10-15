@@ -1,3 +1,4 @@
+import { todayYmd } from "@/lib/timezone";
 import { employeeFotoUrl } from "@/lib/employeePhoto";
 
 export const SITE_BASE = "/api/legacy-files/";
@@ -43,7 +44,7 @@ export function formatDateToYmd(date: Date) {
 }
 
 export function getTodayYmd() {
-  return formatDateToYmd(new Date());
+  return todayYmd();
 }
 
 export function parseDateParam(value?: string | null) {

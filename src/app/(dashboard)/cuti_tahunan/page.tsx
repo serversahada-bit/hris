@@ -1,3 +1,4 @@
+import { wibParts } from "@/lib/timezone";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import db from "@/lib/db";
@@ -40,7 +41,7 @@ function normalizeYear(value?: string) {
     return year;
   }
 
-  return new Date().getFullYear();
+  return wibParts().year;
 }
 
 function formatDateDisplay(value: string | null) {

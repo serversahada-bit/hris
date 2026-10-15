@@ -1,5 +1,6 @@
 "use client";
 
+import { wibParts } from "@/lib/timezone";
 import { useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { formatDateToYmd, formatDisplayDate, getMonthName, type RankingRow } from "./ranking-utils";
@@ -33,11 +34,11 @@ export default function RankingClient({ ranking, selectedDate }: RankingClientPr
   const searchParams = useSearchParams();
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [filterType, setFilterType] = useState<"month" | "range">("month");
-  const today = useMemo(() => new Date(), []);
-  const [exportMonth, setExportMonth] = useState(String(today.getMonth() + 1));
-  const [exportYear, setExportYear] = useState(String(today.getFullYear()));
-  const [exportStartDate, setExportStartDate] = useState(formatDateToYmd(new Date(today.getFullYear(), today.getMonth(), 1)));
-  const [exportEndDate, setExportEndDate] = useState(formatDateToYmd(new Date(today.getFullYear(), today.getMonth() + 1, 0)));
+  const today = useMemo(() => wibParts(), []);
+  const [exportMonth, setExportMonth] = useState(String(today.month));
+  const [exportYear, setExportYear] = useState(String(today.year));
+  const [exportStartDate, setExportStartDate] = useState(formatDateToYmd(new Date(today.year, today.month - 1, 1)));
+  const [exportEndDate, setExportEndDate] = useState(formatDateToYmd(new Date(today.year, today.month, 0)));
 
   const champion = ranking[0] ?? null;
   const others = champion ? ranking.slice(1) : [];

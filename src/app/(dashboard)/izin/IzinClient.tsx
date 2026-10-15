@@ -1,5 +1,6 @@
 "use client";
 
+import { firstOfMonthYmd, lastOfMonthYmd } from "@/lib/timezone";
 import { useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
@@ -83,14 +84,8 @@ export default function IzinClient({
   const [managerRow, setManagerRow] = useState<IzinRow | null>(null);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
-  const [exportStartDate, setExportStartDate] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
-  });
-  const [exportEndDate, setExportEndDate] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()).padStart(2, "0")}`;
-  });
+  const [exportStartDate, setExportStartDate] = useState(() => firstOfMonthYmd());
+  const [exportEndDate, setExportEndDate] = useState(() => lastOfMonthYmd());
 
   const filterOptions: StatusFilter[] = ["Menunggu Manager", "Pending", "Disetujui", "Ditolak", "Semua"];
 

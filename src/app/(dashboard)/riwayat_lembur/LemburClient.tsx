@@ -1,5 +1,6 @@
 "use client";
 
+import { APP_TIMEZONE, firstOfMonthYmd, toDateTimeLocalInput, todayYmd } from "@/lib/timezone";
 import { useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { approveRejectLembur, editLembur, deleteLembur } from "@/app/actions/lembur";
@@ -25,13 +26,8 @@ export default function LemburClient({ data, currentParams }: LemburClientProps)
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Export Modal State
-  const [exportStart, setExportStart] = useState(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
-  });
-  const [exportEnd, setExportEnd] = useState(() => {
-    return new Date().toISOString().split("T")[0];
-  });
+  const [exportStart, setExportStart] = useState(() => firstOfMonthYmd());
+  const [exportEnd, setExportEnd] = useState(() => todayYmd());
 
   const updateFilters = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -60,16 +56,15 @@ export default function LemburClient({ data, currentParams }: LemburClientProps)
   const formatDateTime = (dateStr: string) => {
     if (!dateStr) return "-";
     return new Date(dateStr).toLocaleString("id-ID", {
-      day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
+      day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: APP_TIMEZONE
     }).replace(/\./g, ":");
   };
 
   const formatLocalInput = (dateStr: string) => {
     if (!dateStr) return "";
     const d = new Date(dateStr);
-    const tzOffset = d.getTimezoneOffset() * 60000; // offset in milliseconds
-    const localISOTime = new Date(d.getTime() - tzOffset).toISOString().slice(0, 16);
-    return localISOTime;
+    if (isNaN(d.getTime())) return "";
+    return toDateTimeLocalInput(d);
   };
 
   const handleAction = async (actionFn: Function, formData: FormData) => {

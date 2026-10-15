@@ -1,3 +1,4 @@
+import { APP_TIMEZONE } from "@/lib/timezone";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import db from "@/lib/db";
@@ -23,7 +24,7 @@ function toDateTimeDisplay(value: unknown): string | null {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-    timeZone: "Asia/Jakarta",
+    timeZone: APP_TIMEZONE,
   });
   return dateTimeFormatter.format(date).replace(/\./g, ":");
 }

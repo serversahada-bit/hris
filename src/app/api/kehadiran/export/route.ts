@@ -1,3 +1,4 @@
+import { todayYmd, toYmd } from "@/lib/timezone";
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 
@@ -14,7 +15,7 @@ const dateRangeList = (start: Date, end: Date) => {
   const arr = [];
   let dt = new Date(start);
   while (dt <= end) {
-    arr.push(dt.toISOString().split('T')[0]);
+    arr.push(toYmd(dt));
     dt.setDate(dt.getDate() + 1);
   }
   return arr;
@@ -47,8 +48,8 @@ const getRangeDates = (tanggalPilih: string, range: string, customStart: string,
   }
 
   return { 
-    start: start.toISOString().split('T')[0], 
-    end: end.toISOString().split('T')[0],
+    start: toYmd(start),
+    end: toYmd(end),
     dateList: dateRangeList(start, end)
   };
 };
@@ -58,7 +59,7 @@ export async function GET(request: Request) {
   const tab = searchParams.get('tab') || 'tetap';
   const range = searchParams.get('range') || 'weekly';
   const filter = searchParams.get('filter') || 'all';
-  const tanggal = searchParams.get('tanggal') || new Date().toISOString().split('T')[0];
+  const tanggal = searchParams.get('tanggal') || todayYmd();
   const start_date = searchParams.get('start_date') || '';
   const end_date = searchParams.get('end_date') || '';
 
@@ -93,7 +94,7 @@ export async function GET(request: Request) {
       
       presensiRows.forEach((p: any) => {
         const t = (p.tanggal instanceof Date)
-          ? `${p.tanggal.getFullYear()}-${String(p.tanggal.getMonth() + 1).padStart(2, '0')}-${String(p.tanggal.getDate()).padStart(2, '0')}`
+          ? toYmd(p.tanggal)
           : String(p.tanggal);
         const k = Number(p.karyawan_id);
         if (!presensiMap[t]) presensiMap[t] = {};

@@ -1,3 +1,4 @@
+import { wibParts } from "@/lib/timezone";
 import db from "@/lib/db";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -22,7 +23,7 @@ export default async function RiwayatLemburPage({
   
   let year = parseInt(sp.year || "");
   if (isNaN(year) || year < 2000 || year > 2100) {
-    year = new Date().getFullYear();
+    year = wibParts().year;
   }
 
   let status = (sp.status || "ALL").toUpperCase();

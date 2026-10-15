@@ -1,3 +1,4 @@
+import { APP_TIMEZONE, toYmd } from "@/lib/timezone";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import db from "@/lib/db";
@@ -14,7 +15,7 @@ const BUKTI_DIR_WEB = "/api/legacy-files/uploads/izin/";
 
 function toDateOnly(value: unknown): string | null {
   if (!value) return null;
-  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (value instanceof Date) return toYmd(value);
   return String(value).slice(0, 10);
 }
 
@@ -24,7 +25,7 @@ const dateTimeFormatter = new Intl.DateTimeFormat("id-ID", {
   year: "numeric",
   hour: "2-digit",
   minute: "2-digit",
-  timeZone: "Asia/Jakarta",
+  timeZone: APP_TIMEZONE,
 });
 
 function toDateTimeDisplay(value: unknown): string | null {

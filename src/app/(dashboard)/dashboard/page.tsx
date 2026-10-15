@@ -1,3 +1,4 @@
+import { todayYmd, toYmd } from "@/lib/timezone";
 import db from "@/lib/db";
 import {
   AttendanceChart,
@@ -12,7 +13,7 @@ import {
 export const revalidate = 0; // Disable cache for dashboard
 
 export default async function DashboardPage({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
-  const selectedDate = typeof searchParams.tanggal === "string" ? searchParams.tanggal : new Date().toISOString().split("T")[0];
+  const selectedDate = typeof searchParams.tanggal === "string" ? searchParams.tanggal : todayYmd();
   const today = selectedDate;
 
   // Formatting date
@@ -66,7 +67,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: { 
     for (let i = 6; i >= 0; i--) {
       const d = new Date(dateObj);
       d.setDate(d.getDate() - i);
-      const ds = d.toISOString().split("T")[0];
+      const ds = toYmd(d);
       const dShort = `${d.getDate()} ${bulanIndo[d.getMonth()].slice(0, 3)}`;
       chartDates.push(dShort);
 

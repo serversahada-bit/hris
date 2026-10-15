@@ -1,3 +1,4 @@
+import { firstOfMonthYmd, todayYmd, toStamp } from "@/lib/timezone";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
@@ -29,8 +30,8 @@ export async function GET(request: NextRequest) {
   }
 
   const searchParams = request.nextUrl.searchParams;
-  const startDate = searchParams.get("start_date") || new Date().toISOString().slice(0, 10).replace(/-\d{2}$/, "-01");
-  const endDate = searchParams.get("end_date") || new Date().toISOString().slice(0, 10);
+  const startDate = searchParams.get("start_date") || firstOfMonthYmd();
+  const endDate = searchParams.get("end_date") || todayYmd();
 
   let rows: Array<Record<string, unknown>> = [];
   try {
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse("Export Failed", { status: 500 });
   }
 
-  const filename = `Rekap_Izin_Cuti_${new Date().toISOString().replace(/[-:T]/g, "").slice(0, 14)}.xls`;
+  const filename = `Rekap_Izin_Cuti_${toStamp()}.xls`;
   let html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:x='urn:schemas-microsoft-com:office:excel' xmlns='http://www.w3.org/TR/REC-html40'>";
   html += "<head><meta charset='UTF-8'></head><body>";
   html += "<table border='1'>";

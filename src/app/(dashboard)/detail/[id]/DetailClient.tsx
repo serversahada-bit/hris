@@ -1,5 +1,6 @@
 "use client";
 
+import { APP_TIMEZONE, todayYmd } from "@/lib/timezone";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
@@ -36,7 +37,7 @@ export default function DetailClient({ karyawan, riwayatKarir, presensi, izinCut
     if (!dateString || dateString === "-") return "-";
     const d = new Date(dateString);
     if (isNaN(d.getTime())) return String(dateString);
-    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', timeZone: APP_TIMEZONE });
   };
 
   // Handle Edit Submit
@@ -917,7 +918,7 @@ export default function DetailClient({ karyawan, riwayatKarir, presensi, izinCut
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Tanggal Efektif Berhenti</label>
-                  <input type="date" name="tanggal_efektif" required defaultValue={new Date().toISOString().slice(0, 10)} className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 dark:text-white transition shadow-sm" />
+                  <input type="date" name="tanggal_efektif" required defaultValue={todayYmd()} className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 dark:text-white transition shadow-sm" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Alasan / Keterangan</label>

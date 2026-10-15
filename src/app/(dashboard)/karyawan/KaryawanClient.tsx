@@ -1,5 +1,6 @@
 "use client";
 
+import { todayYmd } from "@/lib/timezone";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
@@ -110,8 +111,7 @@ export default function KaryawanClient({ employees }: { employees: any[] }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
 
-    const today = new Date();
-    const dateStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    const dateStr = todayYmd();
 
     a.href = url;
     a.download = `Data_Karyawan_${dateStr}.xls`;

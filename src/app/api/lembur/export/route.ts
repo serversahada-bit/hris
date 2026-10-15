@@ -1,3 +1,4 @@
+import { APP_TIMEZONE, wibParts } from "@/lib/timezone";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
@@ -36,12 +37,10 @@ export async function GET(request: NextRequest) {
     startSql = startDate.toISOString().split('T')[0] + " 00:00:00";
     endSql = endDate.toISOString().split('T')[0] + " 23:59:59";
     
-    labelPeriode = `${startDate.toLocaleDateString("id-ID")} s.d ${endDate.toLocaleDateString("id-ID")}`;
+    labelPeriode = `${startDate.toLocaleDateString("id-ID", { timeZone: APP_TIMEZONE })} s.d ${endDate.toLocaleDateString("id-ID", { timeZone: APP_TIMEZONE })}`;
     filename = `Rekap_Lembur_HC_${startRaw.replace(/-/g, "")}_sd_${endRaw.replace(/-/g, "")}.xls`;
   } else {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = d.getMonth() + 1;
+    const { year: y, month: m } = wibParts();
     const mStr = m.toString().padStart(2, "0");
     const lastDay = new Date(y, m, 0).getDate();
 
@@ -104,8 +103,8 @@ export async function GET(request: NextRequest) {
         totalMenit += Number(row.durasi_menit) || 0;
       }
 
-      const mulai = row.mulai_at ? new Date(row.mulai_at as string).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':') : "";
-      const selesai = row.selesai_at ? new Date(row.selesai_at as string).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).replace(/\./g, ':') : "";
+      const mulai = row.mulai_at ? new Date(row.mulai_at as string).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: APP_TIMEZONE }).replace(/\./g, ':') : "";
+      const selesai = row.selesai_at ? new Date(row.selesai_at as string).toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: APP_TIMEZONE }).replace(/\./g, ':') : "";
 
       html += `
         <tr>

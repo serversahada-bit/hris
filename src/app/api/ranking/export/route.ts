@@ -1,3 +1,4 @@
+import { wibParts } from "@/lib/timezone";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
@@ -25,7 +26,7 @@ function normalizeMonth(value: string | null) {
     return String(month).padStart(2, "0");
   }
 
-  return String(new Date().getMonth() + 1).padStart(2, "0");
+  return String(wibParts().month).padStart(2, "0");
 }
 
 function normalizeYear(value: string | null) {
@@ -34,7 +35,7 @@ function normalizeYear(value: string | null) {
     return String(year);
   }
 
-  return String(new Date().getFullYear());
+  return String(wibParts().year);
 }
 
 export async function GET(request: NextRequest) {

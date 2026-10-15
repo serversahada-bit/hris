@@ -1,3 +1,4 @@
+import { toYmd } from "@/lib/timezone";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import db from "@/lib/db";
@@ -12,12 +13,7 @@ export const revalidate = 0;
 
 function formatDateOnly(value: unknown): string | null {
   if (!value) return null;
-  if (value instanceof Date) {
-    const y = value.getFullYear();
-    const m = String(value.getMonth() + 1).padStart(2, "0");
-    const d = String(value.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }
+  if (value instanceof Date) return toYmd(value);
   return String(value);
 }
 

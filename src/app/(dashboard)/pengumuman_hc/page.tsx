@@ -1,3 +1,4 @@
+import { APP_TIMEZONE } from "@/lib/timezone";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import db from "@/lib/db";
@@ -38,8 +39,8 @@ function formatDate(value: string | Date | null) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
 
-  const datePart = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "long", year: "numeric" }).format(date);
-  const timePart = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false }).format(date);
+  const datePart = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "long", year: "numeric", timeZone: APP_TIMEZONE }).format(date);
+  const timePart = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: APP_TIMEZONE }).format(date);
   return `${datePart} ${timePart}`;
 }
 

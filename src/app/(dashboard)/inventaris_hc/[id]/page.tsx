@@ -1,3 +1,4 @@
+import { toYmd } from "@/lib/timezone";
 import { cookies, headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import db from "@/lib/db";
@@ -46,7 +47,7 @@ type KeuanganRowRaw = {
 
 function toDateInputValue(value: string | Date | null): string | null {
   if (!value) return null;
-  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (value instanceof Date) return toYmd(value);
   return String(value).slice(0, 10);
 }
 

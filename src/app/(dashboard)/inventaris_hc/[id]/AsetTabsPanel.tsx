@@ -1,5 +1,6 @@
 "use client";
 
+import { APP_TIMEZONE } from "@/lib/timezone";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatRupiah } from "@/lib/asetUtils";
@@ -16,7 +17,7 @@ function formatDateDisplay(value: string | null) {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "long", year: "numeric" }).format(date);
+  return new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "long", year: "numeric", timeZone: APP_TIMEZONE }).format(date);
 }
 
 export default function AsetTabsPanel({

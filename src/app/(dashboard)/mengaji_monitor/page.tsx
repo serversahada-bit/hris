@@ -1,3 +1,4 @@
+import { firstOfMonthYmd, todayYmd } from "@/lib/timezone";
 import db from "@/lib/db";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -26,7 +27,7 @@ export default async function MengajiMonitorPage({
   const org = sp.org || "";
 
   // Helper for dates
-  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' }); // YYYY-MM-DD
+  const todayStr = todayYmd(); // YYYY-MM-DD (WIB)
   
   // Daily params
   const tanggal = sp.tanggal || todayStr;
@@ -37,9 +38,7 @@ export default async function MengajiMonitorPage({
   
   if (!start) {
     // default to 1st of current month
-    const d = new Date();
-    d.setDate(1);
-    start = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+    start = firstOfMonthYmd();
   }
 
   // Fetch Organizations for dropdown
