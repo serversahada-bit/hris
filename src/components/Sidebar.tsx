@@ -6,15 +6,18 @@ import { usePathname } from "next/navigation";
 
 interface SidebarProps {
   pendingIzinCount: number;
+  pendingLegalitasCount: number;
   isCollapsed?: boolean;
 }
 
-export default function Sidebar({ pendingIzinCount, isCollapsed = false }: SidebarProps) {
+export default function Sidebar({ pendingIzinCount, pendingLegalitasCount, isCollapsed = false }: SidebarProps) {
   const pathname = usePathname();
 
   const menuClassLight = (menuPaths: string[]) => {
     const isActive = menuPaths.some((p) => {
       if (p === "/dashboard") return pathname === "/dashboard";
+      // "/legal" juga substring dari "/legalitas"; cocokkan per segmen supaya tidak ikut aktif.
+      if (p === "/legal") return pathname === "/legal" || pathname.startsWith("/legal/");
       return pathname.includes(p);
     });
     if (isActive) {
@@ -26,6 +29,7 @@ export default function Sidebar({ pendingIzinCount, isCollapsed = false }: Sideb
   const iconClassLight = (menuPaths: string[]) => {
     const isActive = menuPaths.some((p) => {
       if (p === "/dashboard") return pathname === "/dashboard";
+      if (p === "/legal") return pathname === "/legal" || pathname.startsWith("/legal/");
       return pathname.includes(p);
     });
     return isActive ? "text-[#3c50e0] dark:text-blue-400" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-500 dark:group-hover:text-slate-300 transition-colors";
@@ -152,6 +156,25 @@ export default function Sidebar({ pendingIzinCount, isCollapsed = false }: Sideb
         <Link href="/legal" className={linkClass(["/legal"])}>
           <span className={`material-symbols-outlined text-[20px] ${iconClassLight(["/legal"])}`}>balance</span>
           {!isCollapsed && <span className="text-[15px] whitespace-nowrap">Legal</span>}
+        </Link>
+
+        <Link href="/legalitas" className={linkClass(["/legalitas"])}>
+          <span className={`material-symbols-outlined text-[20px] ${iconClassLight(["/legalitas"])} relative`}>
+            verified
+            {isCollapsed && pendingLegalitasCount > 0 && (
+              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-[#3c50e0]"></span>
+            )}
+          </span>
+          {!isCollapsed && (
+            <>
+              <span className="text-[15px] whitespace-nowrap flex-1">Pengajuan Legalitas</span>
+              {pendingLegalitasCount > 0 && (
+                <span className="h-5 w-5 rounded bg-[#3c50e0] text-white flex items-center justify-center text-[11px] font-bold">
+                  {pendingLegalitasCount}
+                </span>
+              )}
+            </>
+          )}
         </Link>
 
         <Link href="/pengumuman_hc" className={linkClass(["/pengumuman_hc"])}>

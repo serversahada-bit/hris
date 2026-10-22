@@ -77,3 +77,22 @@ export async function sendPushBroadcast(payload: PushPayload): Promise<number> {
     throw new PushBroadcastError('Terjadi kesalahan server saat mengirim notifikasi. Periksa koneksi database dan log server sebelum mencoba lagi.');
   }
 }
+
+// Push ke satu karyawan (semua perangkat yang ia daftarkan di Great). Berbeda
+// dengan broadcast: tidak melempar error, karena notifikasi hanya efek samping
+// dari aksi utama (mis. minta revisi legalitas). Mengembalikan jumlah terkirim.
+export async function sendPushToKaryawan(karyawanId: number, payload: PushPayload): Promise<number> {
+  if (!vapidConfigured) return 0;
+
+  try {
+    const [subs] = await db.query(
+      'SELECT id, endpoint, p256dh, auth FROM hc_push_subscriptions WHERE karyawan_id = ?',
+      [karyawanId]
+    );
+    const results = await Promise.all((subs as PushSubscriptionRow[]).map((sub) => sendToSubscription(sub, payload)));
+    return results.filter(Boolean).length;
+  } catch (error: unknown) {
+    console.error('[Push] sendPushToKaryawan gagal:', error);
+    return 0;
+  }
+}

@@ -3,6 +3,9 @@ import { readFile } from "fs/promises";
 import path from "path";
 
 const BASE_DIR = process.env.LEGACY_UPLOAD_DIR || "/data/data_kantor/hrd/upload";
+// Folder upload bersama dengan absen-main; file yang juga harus bisa dibuka
+// dari absen-main (mis. dokumen hasil legalitas) ditulis ke sini.
+export const LEGACY_UPLOAD_DIR = BASE_DIR;
 export const LEGACY_REMOTE_ORIGIN = "https://great.ptslu.id";
 
 const MIME_TYPES: Record<string, string> = {
@@ -21,6 +24,8 @@ const PREFIX_REMAP: [string, string][] = [
   ["admin/uploads/", ""],
   ["uploads/izin/", "izin/"],
   ["uploads/presensi/", "presensi/"],
+  // absen-main menyimpan PDF pengajuan legalitas di LEGACY_UPLOAD_DIR/legalitas.
+  ["uploads/legalitas/", "legalitas/"],
   ["absen/", "presensi/"],
 ];
 
