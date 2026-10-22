@@ -12,7 +12,8 @@ export const metadata = {
 export const revalidate = 0;
 
 const FILE_DIR_WEB = "/api/legacy-files/uploads/legalitas/";
-const FILE_HASIL_DIR_WEB = "/uploads/legalitas_hasil/";
+const FILE_HASIL_DIR_WEB = "/api/uploads/legalitas_hasil/";
+const FILE_REVISI_DIR_WEB = "/api/uploads/legalitas_revisi/";
 
 function toDateTimeDisplay(value: unknown): string | null {
   if (!value) return null;
@@ -35,8 +36,8 @@ function safeBasename(value: string | null) {
   return raw.replace(/\?.*$/, "").split("/").pop() || "";
 }
 
-function normalizeStatus(value?: string): "Pending" | "Diproses" | "Selesai" | "Ditolak" | "Semua" {
-  const allowed = ["Pending", "Diproses", "Selesai", "Ditolak", "Semua"] as const;
+function normalizeStatus(value?: string): "Pending" | "Diproses" | "Revisi" | "Selesai" | "Ditolak" | "Semua" {
+  const allowed = ["Pending", "Diproses", "Revisi", "Selesai", "Ditolak", "Semua"] as const;
   if (allowed.includes(value as (typeof allowed)[number])) {
     return value as (typeof allowed)[number];
   }
@@ -77,6 +78,7 @@ export default async function LegalitasPage({
     rows = (result as Array<Record<string, unknown>>).map((row) => {
       const file = safeBasename(row.file_pdf as string | null);
       const fileHasil = safeBasename(row.file_hasil as string | null);
+      const fileRevisi = safeBasename(row.file_revisi as string | null);
       return {
         id: Number(row.id),
         karyawan_id: Number(row.karyawan_id),
@@ -92,6 +94,11 @@ export default async function LegalitasPage({
         manager_at: toDateTimeDisplay(row.manager_at),
         file_url: file ? `${FILE_DIR_WEB}${encodeURIComponent(file)}` : "",
         file_hasil_url: fileHasil ? `${FILE_HASIL_DIR_WEB}${encodeURIComponent(fileHasil)}` : "",
+        catatan_revisi: (row.catatan_revisi as string | null) ?? null,
+        file_revisi_url: fileRevisi ? `${FILE_REVISI_DIR_WEB}${encodeURIComponent(fileRevisi)}` : "",
+        revisi_at: toDateTimeDisplay(row.revisi_at),
+        revisi_dikirim_at: toDateTimeDisplay(row.revisi_dikirim_at),
+        jumlah_revisi: Number(row.jumlah_revisi ?? 0),
       };
     });
   } catch (error) {

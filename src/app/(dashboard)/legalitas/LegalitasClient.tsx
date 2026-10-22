@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { approveLegalitas, deletePengajuanLegalitas, rejectLegalitas, selesaikanLegalitas } from "@/app/actions/legalitas";
+import { approveLegalitas, deletePengajuanLegalitas, rejectLegalitas, revisiLegalitas, selesaikanLegalitas } from "@/app/actions/legalitas";
 
-type StatusFilter = "Pending" | "Diproses" | "Selesai" | "Ditolak" | "Semua";
+type StatusFilter = "Pending" | "Diproses" | "Revisi" | "Selesai" | "Ditolak" | "Semua";
 
 export interface LegalitasRow {
   id: number;
@@ -21,11 +21,17 @@ export interface LegalitasRow {
   manager_at: string | null;
   file_url: string;
   file_hasil_url: string;
+  catatan_revisi: string | null;
+  file_revisi_url: string;
+  revisi_at: string | null;
+  revisi_dikirim_at: string | null;
+  jumlah_revisi: number;
 }
 
 function statusBadge(status: string | null) {
   if (status === "Selesai") return "bg-emerald-50 text-emerald-800 border border-emerald-100";
   if (status === "Diproses") return "bg-sky-50 text-sky-800 border border-sky-100";
+  if (status === "Revisi") return "bg-violet-50 text-violet-800 border border-violet-100";
   if (status === "Ditolak") return "bg-rose-50 text-rose-800 border border-rose-100";
   return "bg-amber-50 text-amber-800 border border-amber-100";
 }
@@ -36,6 +42,11 @@ function canProses(row: LegalitasRow) {
 
 function canSelesaikan(row: LegalitasRow) {
   return row.status === "Diproses";
+}
+
+function canRevisi(row: LegalitasRow) {
+  const status = row.status || "Pending";
+  return status === "Pending" || status === "Diproses";
 }
 
 export default function LegalitasClient({
@@ -56,8 +67,11 @@ export default function LegalitasClient({
   const [rejectReason, setRejectReason] = useState("");
   const [estimasiHari, setEstimasiHari] = useState("");
   const [fileHasil, setFileHasil] = useState<File | null>(null);
+  const [revisiRow, setRevisiRow] = useState<LegalitasRow | null>(null);
+  const [catatanRevisi, setCatatanRevisi] = useState("");
+  const [fileRevisi, setFileRevisi] = useState<File | null>(null);
 
-  const filterOptions: StatusFilter[] = ["Pending", "Diproses", "Selesai", "Ditolak", "Semua"];
+  const filterOptions: StatusFilter[] = ["Pending", "Diproses", "Revisi", "Selesai", "Ditolak", "Semua"];
 
   const switchStatus = (status: StatusFilter) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -122,6 +136,29 @@ export default function LegalitasClient({
       if (result.success) {
         setSelesaikanRow(null);
         setFileHasil(null);
+        refreshAfterAction();
+      }
+      alert(result.message);
+    });
+  };
+
+  const handleRevisi = () => {
+    if (!revisiRow) return;
+    if (!catatanRevisi.trim()) {
+      alert("Catatan revisi wajib diisi.");
+      return;
+    }
+    const formData = new FormData();
+    formData.set("legalitas_id", String(revisiRow.id));
+    formData.set("status_filter", selectedStatus);
+    formData.set("catatan_revisi", catatanRevisi);
+    if (fileRevisi) formData.set("file_revisi", fileRevisi);
+    startTransition(async () => {
+      const result = await revisiLegalitas(formData);
+      if (result.success) {
+        setRevisiRow(null);
+        setCatatanRevisi("");
+        setFileRevisi(null);
         refreshAfterAction();
       }
       alert(result.message);
@@ -216,6 +253,11 @@ export default function LegalitasClient({
                       <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold ${statusBadge(row.status)}`}>
                         {row.status || "Pending"}
                       </span>
+                      {row.jumlah_revisi > 0 && (row.status || "Pending") === "Pending" && (
+                        <div className="text-[11px] text-violet-600 dark:text-violet-300 font-bold mt-1">
+                          Sudah direvisi karyawan (ke-{row.jumlah_revisi})
+                        </div>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-slate-500 dark:text-slate-400 font-semibold">
                       {row.created_at || "-"}
@@ -254,6 +296,20 @@ export default function LegalitasClient({
                             className="h-9 px-4 rounded-2xl bg-sky-600 text-white text-xs font-extrabold hover:bg-sky-700 shadow-sm"
                           >
                             Selesaikan
+                          </button>
+                        )}
+
+                        {canRevisi(row) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCatatanRevisi("");
+                              setFileRevisi(null);
+                              setRevisiRow(row);
+                            }}
+                            className="h-9 px-4 rounded-2xl bg-violet-600 text-white text-xs font-extrabold hover:bg-violet-700 shadow-sm"
+                          >
+                            Revisi
                           </button>
                         )}
 
@@ -321,6 +377,30 @@ export default function LegalitasClient({
                   <div className="text-xs text-rose-600 font-extrabold uppercase tracking-[0.22em]">Alasan Penolakan</div>
                   <div className="text-rose-800 dark:text-rose-300 mt-2 whitespace-pre-wrap">{detailRow.catatan_admin}</div>
                   {detailRow.manager_at && <div className="text-xs text-rose-500 mt-2">Waktu: {detailRow.manager_at}</div>}
+                </div>
+              )}
+
+              {detailRow.catatan_revisi && detailRow.jumlah_revisi > 0 && (
+                <div className="rounded-3xl bg-violet-50/70 dark:bg-violet-900/10 border border-violet-100 dark:border-violet-800/40 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-xs text-violet-600 font-extrabold uppercase tracking-[0.22em]">
+                      Catatan Revisi Terakhir (ke-{detailRow.jumlah_revisi})
+                    </div>
+                    {detailRow.file_revisi_url && (
+                      <a href={detailRow.file_revisi_url} target="_blank" className="h-8 px-3 inline-flex items-center rounded-2xl bg-white dark:bg-slate-800 text-violet-700 dark:text-violet-300 border border-violet-100 dark:border-violet-800/40 font-extrabold text-xs hover:bg-violet-100 dark:hover:bg-violet-900/30 transition shrink-0">
+                        Lampiran Revisi
+                      </a>
+                    )}
+                  </div>
+                  <div className="text-violet-900 dark:text-violet-200 mt-2 whitespace-pre-wrap">{detailRow.catatan_revisi}</div>
+                  <div className="text-xs text-violet-500 mt-2">
+                    Diminta: {detailRow.revisi_at || "-"}
+                    {detailRow.status === "Revisi"
+                      ? " • Menunggu perbaikan dari karyawan"
+                      : detailRow.revisi_dikirim_at
+                        ? ` • Diperbaiki karyawan: ${detailRow.revisi_dikirim_at}`
+                        : ""}
+                  </div>
                 </div>
               )}
 
@@ -439,6 +519,52 @@ export default function LegalitasClient({
                 </button>
                 <button type="button" disabled={isPending} onClick={() => handleSelesaikan()} className="h-11 flex-1 rounded-2xl font-extrabold text-white bg-sky-600 hover:bg-sky-700 disabled:opacity-60">
                   Selesaikan
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {revisiRow && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/35 backdrop-blur-sm" onClick={() => setRevisiRow(null)}></div>
+          <div className="relative w-full max-w-md rounded-3xl bg-white/90 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-[0_60px_140px_-90px_rgba(2,6,23,.75)] overflow-hidden">
+            <div className="bg-white/70 dark:bg-slate-800 px-6 py-5 border-b border-slate-100 dark:border-slate-700">
+              <h3 className="text-xl font-extrabold text-slate-900 dark:text-white text-center">Minta Revisi</h3>
+              <p className="text-slate-600 dark:text-slate-300 text-sm text-center mt-2">
+                {revisiRow.nama || `ID: ${revisiRow.karyawan_id}`} • {revisiRow.jenis_dokumen || "-"}
+              </p>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-extrabold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400 mb-2">Catatan revisi (wajib)</label>
+                <textarea
+                  value={catatanRevisi}
+                  onChange={(event) => setCatatanRevisi(event.target.value)}
+                  rows={4}
+                  className="w-full rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 text-sm outline-none"
+                  placeholder="Jelaskan bagian yang perlu diperbaiki karyawan"
+                ></textarea>
+              </div>
+              <div>
+                <label className="block text-xs font-extrabold uppercase tracking-[0.22em] text-slate-500 dark:text-slate-400 mb-2">Lampiran PDF (opsional)</label>
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={(event) => setFileRevisi(event.target.files?.[0] ?? null)}
+                  className="w-full text-sm text-slate-600 dark:text-slate-300 file:mr-3 file:h-10 file:px-4 file:rounded-2xl file:border-0 file:bg-violet-50 dark:file:bg-violet-900/20 file:text-violet-700 dark:file:text-violet-300 file:font-extrabold file:text-xs"
+                />
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Karyawan akan menerima notifikasi dan bisa mengunggah ulang PDF dari Riwayat Legalitas. Setelah diunggah ulang, pengajuan kembali ke status Pending.
+              </p>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setRevisiRow(null)} className="h-11 flex-1 rounded-2xl bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-extrabold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 transition">
+                  Batal
+                </button>
+                <button type="button" disabled={isPending} onClick={() => handleRevisi()} className="h-11 flex-1 rounded-2xl font-extrabold text-white bg-violet-600 hover:bg-violet-700 disabled:opacity-60">
+                  Kirim Revisi
                 </button>
               </div>
             </div>
