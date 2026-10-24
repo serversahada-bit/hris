@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import db from "@/lib/db";
-import { ensurePengumumanTable } from "@/lib/pengumumanDb";
+import { ensurePengumumanTable, KARYAWAN_WAJIB_BACA_SQL } from "@/lib/pengumumanDb";
 import PengumumanClient from "./PengumumanClient";
 
 export const metadata = {
@@ -17,6 +17,9 @@ type PengumumanRow = {
   isi: string;
   lampiran: string | null;
   tanggal_pelaksanaan: string | null;
+  is_penting: number;
+  tgl_notifikasi: string | null;
+  push_terkirim_at: string | null;
   created_at: string | Date;
   updated_at: string | Date | null;
 };
@@ -29,6 +32,12 @@ export type PengumumanItem = {
   lampiranUrl: string | null;
   tanggalPelaksanaan: string | null;
   tanggalPelaksanaanLabel: string | null;
+  isPenting: boolean;
+  tglNotifikasi: string | null;
+  tglNotifikasiLabel: string | null;
+  pushTerkirimAt: string | null;
+  jumlahWajib: number;
+  jumlahSudahBaca: number;
   createdAt: string;
   updatedAt: string | null;
 };
@@ -64,8 +73,23 @@ export default async function PengumumanHcPage() {
     await ensurePengumumanTable();
 
     const [rows] = await db.query(
-      `SELECT id, judul, isi, lampiran, DATE_FORMAT(tanggal_pelaksanaan, '%Y-%m-%d') AS tanggal_pelaksanaan, created_at, updated_at
+      `SELECT id, judul, isi, lampiran, DATE_FORMAT(tanggal_pelaksanaan, '%Y-%m-%d') AS tanggal_pelaksanaan,
+              is_penting, DATE_FORMAT(tgl_notifikasi, '%Y-%m-%d') AS tgl_notifikasi,
+              DATE_FORMAT(push_terkirim_at, '%d/%m/%Y %H:%i') AS push_terkirim_at, created_at, updated_at
        FROM pengumuman_hc ORDER BY created_at DESC`
+    );
+
+    // Progres baca pengumuman penting: wajib = karyawan aktif yang sudah bergabung per tgl_notifikasi.
+    const [progresRows] = await db.query(
+      `SELECT p.id, COUNT(k.id) AS wajib, COUNT(b.id) AS sudah
+       FROM pengumuman_hc p
+       JOIN karyawan k ON ${KARYAWAN_WAJIB_BACA_SQL}
+       LEFT JOIN pengumuman_hc_baca b ON b.pengumuman_id = p.id AND b.karyawan_id = k.id
+       WHERE p.is_penting = 1
+       GROUP BY p.id`
+    );
+    const progres = new Map(
+      (progresRows as { id: number; wajib: number; sudah: number }[]).map((row) => [row.id, row])
     );
 
     items = (rows as PengumumanRow[]).map((row) => ({
@@ -76,6 +100,12 @@ export default async function PengumumanHcPage() {
       lampiranUrl: row.lampiran ? `/api/pengumuman-uploads/${encodeURIComponent(row.lampiran)}` : null,
       tanggalPelaksanaan: row.tanggal_pelaksanaan,
       tanggalPelaksanaanLabel: formatTanggal(row.tanggal_pelaksanaan),
+      isPenting: Boolean(row.is_penting),
+      tglNotifikasi: row.tgl_notifikasi,
+      tglNotifikasiLabel: formatTanggal(row.tgl_notifikasi),
+      pushTerkirimAt: row.push_terkirim_at,
+      jumlahWajib: Number(progres.get(row.id)?.wajib ?? 0),
+      jumlahSudahBaca: Number(progres.get(row.id)?.sudah ?? 0),
       createdAt: formatDate(row.created_at) ?? "-",
       updatedAt: formatDate(row.updated_at),
     }));
