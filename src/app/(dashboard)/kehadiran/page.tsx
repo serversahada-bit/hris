@@ -38,6 +38,8 @@ export default async function KehadiranPage({
         p.jam_pulang,
         p.foto_masuk,
         p.foto_pulang,
+        p.lokasi_masuk,
+        p.lokasi_pulang,
         p.status AS status_absen,
         p.catatan
       FROM karyawan k
