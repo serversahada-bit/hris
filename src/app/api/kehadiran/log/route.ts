@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
+import { selectJarakKantor } from '@/lib/kantorDb';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -26,7 +27,8 @@ export async function GET(request: Request) {
     const emp = empRes.length > 0 ? empRes[0] : null;
 
     const [rows]: any = await db.query(`
-      SELECT tanggal, jam_masuk, jam_pulang, foto_masuk, foto_pulang, status, catatan, lokasi_masuk, lokasi_pulang
+      SELECT tanggal, jam_masuk, jam_pulang, foto_masuk, foto_pulang, status, catatan, lokasi_masuk, lokasi_pulang,
+             ${await selectJarakKantor('presensi')}
       FROM presensi
       WHERE karyawan_id=? AND tanggal BETWEEN ? AND ?
       ORDER BY tanggal DESC
@@ -44,7 +46,13 @@ export async function GET(request: Request) {
       status: String(r.status || ''),
       catatan: String(r.catatan || ''),
       lokasi_masuk: String(r.lokasi_masuk || ''),
-      lokasi_pulang: String(r.lokasi_pulang || '')
+      lokasi_pulang: String(r.lokasi_pulang || ''),
+      kantor_masuk: r.kantor_masuk,
+      jarak_masuk: r.jarak_masuk,
+      luar_kantor_masuk: r.luar_kantor_masuk,
+      kantor_pulang: r.kantor_pulang,
+      jarak_pulang: r.jarak_pulang,
+      luar_kantor_pulang: r.luar_kantor_pulang
     }));
 
     return NextResponse.json({

@@ -1,6 +1,7 @@
 import db from "@/lib/db";
 import KehadiranClient from "./KehadiranClient";
 import { employeeFotoUrl } from "@/lib/employeePhoto";
+import { selectJarakKantor } from "@/lib/kantorDb";
 
 export default async function KehadiranPage({
   searchParams,
@@ -23,6 +24,7 @@ export default async function KehadiranPage({
   };
 
   const tetapPicked = getScheduleTetap(tanggalPilih);
+  const jarakKantorCols = await selectJarakKantor('p');
 
   const buildRows = async (mode: 'tetap' | 'streamer') => {
     const whereMode = mode === 'streamer' 
@@ -39,6 +41,7 @@ export default async function KehadiranPage({
         p.foto_pulang,
         p.lokasi_masuk,
         p.lokasi_pulang,
+        ${jarakKantorCols},
         p.status AS status_absen,
         p.catatan
       FROM karyawan k

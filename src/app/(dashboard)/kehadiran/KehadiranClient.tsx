@@ -6,12 +6,26 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { editKehadiran, toggleJenisJadwal } from "@/app/actions/kehadiran";
 import { employeeFotoUrl } from "@/lib/employeePhoto";
 import { useAlert } from "@/components/AlertProvider";
+import { formatJarak } from "@/lib/kantorUtils";
 
 // Lokasi absen dari Great disimpan sebagai "lat,lon" (GPS HP); data lama bisa berupa teks alamat.
 const lokasiMapsUrl = (lokasi: string | null | undefined) => {
   const value = (lokasi || "").trim();
   return value ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(value)}` : null;
 };
+
+// Hasil cek jarak ke kantor terdekat dari Great; kosong untuk absen sebelum fitur Lokasi Kantor atau saat belum ada kantor aktif.
+const JarakKantor = ({ kantor, jarak, luar }: { kantor: string | null; jarak: number | null; luar: number | null }) => {
+  if (!kantor || jarak == null) return null;
+  return (
+    <div className={`mt-1 text-[11px] font-bold flex items-center gap-1 ${luar ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+      <span className="material-symbols-outlined text-[14px]">{luar ? 'wrong_location' : 'where_to_vote'}</span>
+      {luar ? `Di luar kantor · ${formatJarak(jarak)} dari ${kantor}` : `${kantor} · ${formatJarak(jarak)}`}
+    </div>
+  );
+};
+
+const diLuarKantor = (k: any) => Boolean(k.luar_kantor_masuk || k.luar_kantor_pulang);
 
 export default function KehadiranClient({
   listTetap,
@@ -41,7 +55,8 @@ export default function KehadiranClient({
   const [editModalData, setEditModalData] = useState<any>(null);
   const [detailModalData, setDetailModalData] = useState<any>(null);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  
+  const [hanyaLuarKantor, setHanyaLuarKantor] = useState(false);
+
   // Export form states
   const [exportRange, setExportRange] = useState("weekly");
   const [exportFilter, setExportFilter] = useState("all");
@@ -113,7 +128,9 @@ export default function KehadiranClient({
     setIsExportModalOpen(false);
   };
 
-  const currentList = activeTab === 'streamer' ? listStreamer : listTetap;
+  const tabList = activeTab === 'streamer' ? listStreamer : listTetap;
+  const jumlahLuarKantor = tabList.filter(diLuarKantor).length;
+  const currentList = hanyaLuarKantor ? tabList.filter(diLuarKantor) : tabList;
 
   return (
     <div className="animate-in fade-in duration-500 w-full flex flex-col gap-6 relative">
@@ -160,7 +177,19 @@ export default function KehadiranClient({
           </button>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setHanyaLuarKantor(!hanyaLuarKantor)}
+            className={`px-4 py-2 rounded-xl text-[13px] font-bold border shadow-sm flex items-center gap-1.5 transition-colors ${
+              hanyaLuarKantor
+                ? 'bg-amber-500 border-amber-500 text-white'
+                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-500/10'
+            }`}
+            title="Tampilkan hanya karyawan yang absen di luar radius kantor"
+          >
+            <span className="material-symbols-outlined text-[18px]">wrong_location</span>
+            Di luar kantor ({jumlahLuarKantor})
+          </button>
           <label className="text-[13px] font-bold text-slate-500 dark:text-slate-400">Pilih Tanggal:</label>
           <input 
             type="date" 
@@ -201,7 +230,9 @@ export default function KehadiranClient({
             <tbody className="text-sm">
               {currentList.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-slate-400 text-sm">Tidak ada data karyawan di jadwal ini.</td>
+                  <td colSpan={6} className="px-5 py-8 text-center text-slate-400 text-sm">
+                    {hanyaLuarKantor ? 'Tidak ada absen di luar kantor pada tanggal ini.' : 'Tidak ada data karyawan di jadwal ini.'}
+                  </td>
                 </tr>
               ) : (
                 currentList.map((k, idx) => {
@@ -248,6 +279,7 @@ export default function KehadiranClient({
                             </a>
                           </div>
                         )}
+                        <JarakKantor kantor={k.kantor_masuk} jarak={k.jarak_masuk} luar={k.luar_kantor_masuk} />
                       </td>
                       <td className="px-5 py-4 align-top">
                         {jp ? <span className="font-bold text-slate-700 dark:text-slate-300">{jp}</span> : <span className="text-slate-300 dark:text-slate-600">-</span>}
@@ -265,6 +297,7 @@ export default function KehadiranClient({
                             </a>
                           </div>
                         )}
+                        <JarakKantor kantor={k.kantor_pulang} jarak={k.jarak_pulang} luar={k.luar_kantor_pulang} />
                       </td>
                       <td className="px-5 py-4 align-top">
                         <span className={`px-2 py-1 rounded text-[11px] font-bold ${
@@ -406,11 +439,13 @@ export default function KehadiranClient({
                               {r.jam_masuk ? <span className="font-bold text-slate-800 dark:text-white">{r.jam_masuk}</span> : '-'}
                               {r.foto_masuk && <div className="mt-1"><a href={r.foto_masuk.startsWith('http') ? r.foto_masuk : `/api/legacy-files/${r.foto_masuk}`} target="_blank" className="text-[11px] text-blue-500 flex items-center"><span className="material-symbols-outlined text-[12px] mr-1">image</span> Foto</a></div>}
                               {lokasiMapsUrl(r.lokasi_masuk) && <div className="mt-1"><a href={lokasiMapsUrl(r.lokasi_masuk)!} target="_blank" rel="noopener noreferrer" title={r.lokasi_masuk} className="text-[11px] text-blue-500 flex items-center"><span className="material-symbols-outlined text-[12px] mr-1">location_on</span> Lokasi</a></div>}
+                              <JarakKantor kantor={r.kantor_masuk} jarak={r.jarak_masuk} luar={r.luar_kantor_masuk} />
                             </td>
                             <td className="py-4">
                               {r.jam_pulang ? <span className="font-bold text-slate-800 dark:text-white">{r.jam_pulang}</span> : '-'}
                               {r.foto_pulang && <div className="mt-1"><a href={r.foto_pulang.startsWith('http') ? r.foto_pulang : `/api/legacy-files/${r.foto_pulang}`} target="_blank" className="text-[11px] text-blue-500 flex items-center"><span className="material-symbols-outlined text-[12px] mr-1">image</span> Foto</a></div>}
                               {lokasiMapsUrl(r.lokasi_pulang) && <div className="mt-1"><a href={lokasiMapsUrl(r.lokasi_pulang)!} target="_blank" rel="noopener noreferrer" title={r.lokasi_pulang} className="text-[11px] text-blue-500 flex items-center"><span className="material-symbols-outlined text-[12px] mr-1">location_on</span> Lokasi</a></div>}
+                              <JarakKantor kantor={r.kantor_pulang} jarak={r.jarak_pulang} luar={r.luar_kantor_pulang} />
                             </td>
                             <td className="py-4">
                               <span className={`px-2 py-1 rounded text-[11px] font-bold ${r.status.toLowerCase().includes('telat') ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/10' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10'}`}>{r.status}</span>
