@@ -92,6 +92,11 @@ export default function Sidebar({ pendingIzinCount, pendingLegalitasCount, isCol
           {!isCollapsed && <span className="text-[15px] whitespace-nowrap">Kehadiran</span>}
         </Link>
 
+        <Link href="/lokasi_kantor" className={linkClass(["/lokasi_kantor"])}>
+          <span className={`material-symbols-outlined text-[20px] ${iconClassLight(["/lokasi_kantor"])}`}>location_on</span>
+          {!isCollapsed && <span className="text-[15px] whitespace-nowrap">Lokasi Kantor</span>}
+        </Link>
+
         <Link href="/mengaji_monitor" className={linkClass(["/mengaji_monitor", "/mengaji"])}>
           <span className={`material-symbols-outlined text-[20px] ${iconClassLight(["/mengaji_monitor", "/mengaji"])}`}>auto_stories</span>
           {!isCollapsed && <span className="text-[15px] whitespace-nowrap">Mengaji Harian</span>}
