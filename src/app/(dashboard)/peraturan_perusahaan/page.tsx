@@ -4,6 +4,8 @@ import { stat } from "fs/promises";
 import path from "path";
 import db from "@/lib/db";
 import { PERATURAN_UPLOAD_DIR } from "@/lib/peraturanUploads";
+import { KARYAWAN_WAJIB_BACA_PERATURAN_SQL, ensurePeraturanTables, formatTerbitLabel } from "@/lib/peraturanDb";
+import { nowWibDb } from "@/lib/pengumumanDb";
 import PeraturanClient from "./PeraturanClient";
 import PengajuanPeraturanClient, { type PengajuanRow } from "./PengajuanPeraturanClient";
 import PeraturanTabs from "./PeraturanTabs";
@@ -22,6 +24,7 @@ type DocRow = {
   judul: string | null;
   file: string;
   uploaded_at: string | null;
+  terbit_at: string | null;
   pengaju_nama: string | null;
   pengaju_divisi: string | null;
 };
@@ -34,6 +37,10 @@ export type DocItem = {
   date: string;
   size: number | null;
   pengaju: string | null;
+  // null = dokumen lama (sebelum fitur jadwal terbit), langsung tampil tanpa wajib baca.
+  terbitLabel: string | null;
+  terjadwal: boolean;
+  baca: { wajib: number; sudah: number } | null;
 };
 
 type StatusFilter = "Pending" | "Disetujui" | "Ditolak" | "Semua";
@@ -92,35 +99,7 @@ export default async function PeraturanPerusahaanPage({
   let pendingCount = 0;
 
   try {
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS peraturan_perusahaan (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        judul VARCHAR(255) NOT NULL,
-        file VARCHAR(255) NOT NULL,
-        uploaded_by INT NULL,
-        uploaded_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        INDEX (uploaded_at),
-        INDEX (uploaded_by)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    `);
-
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS pengajuan_peraturan (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        karyawan_id INT NOT NULL,
-        judul VARCHAR(255) NOT NULL,
-        file VARCHAR(255) NOT NULL,
-        catatan TEXT NULL,
-        status ENUM('Pending', 'Disetujui', 'Ditolak') NOT NULL DEFAULT 'Pending',
-        catatan_admin VARCHAR(255) NULL,
-        peraturan_id INT NULL,
-        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        processed_at DATETIME NULL,
-        INDEX idx_karyawan (karyawan_id),
-        INDEX idx_status (status),
-        INDEX idx_peraturan (peraturan_id)
-      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-    `);
+    await ensurePeraturanTables();
 
     const [countRows] = await db.query(
       "SELECT COUNT(*) AS total FROM pengajuan_peraturan WHERE status = 'Pending'"
@@ -132,7 +111,8 @@ export default async function PeraturanPerusahaanPage({
 
   if (tab === "dokumen") {
     try {
-      let sql = `SELECT p.id, p.judul, p.file, p.uploaded_at, k.nama AS pengaju_nama, k.organisasi AS pengaju_divisi
+      let sql = `SELECT p.id, p.judul, p.file, p.uploaded_at, DATE_FORMAT(p.terbit_at, '%Y-%m-%d %H:%i:%s') AS terbit_at,
+                        k.nama AS pengaju_nama, k.organisasi AS pengaju_divisi
                  FROM peraturan_perusahaan p
                  LEFT JOIN pengajuan_peraturan pp ON pp.peraturan_id = p.id
                  LEFT JOIN karyawan k ON k.id = pp.karyawan_id
@@ -145,6 +125,21 @@ export default async function PeraturanPerusahaanPage({
       sql += " ORDER BY p.uploaded_at DESC, p.id DESC";
 
       const [rows] = await db.query(sql, sqlParams);
+
+      // Progres baca dokumen yang sudah terbit: wajib = karyawan aktif yang sudah bergabung per tanggal terbit.
+      const now = nowWibDb();
+      const [progresRows] = await db.query(
+        `SELECT p.id, COUNT(k.id) AS wajib, COUNT(b.id) AS sudah
+         FROM peraturan_perusahaan p
+         JOIN karyawan k ON ${KARYAWAN_WAJIB_BACA_PERATURAN_SQL}
+         LEFT JOIN peraturan_perusahaan_baca b ON b.peraturan_id = p.id AND b.karyawan_id = k.id
+         WHERE p.terbit_at IS NOT NULL AND p.terbit_at <= ?
+         GROUP BY p.id`,
+        [now]
+      );
+      const progres = new Map(
+        (progresRows as { id: number; wajib: number; sudah: number }[]).map((row) => [row.id, row])
+      );
 
       docs = await Promise.all(
         (rows as DocRow[]).map(async (row) => {
@@ -165,6 +160,11 @@ export default async function PeraturanPerusahaanPage({
             date: formatDate(row.uploaded_at),
             size,
             pengaju: formatPengaju(row.pengaju_nama, row.pengaju_divisi),
+            terbitLabel: row.terbit_at ? formatTerbitLabel(row.terbit_at) : null,
+            terjadwal: Boolean(row.terbit_at && row.terbit_at > now),
+            baca: progres.has(row.id)
+              ? { wajib: Number(progres.get(row.id)?.wajib ?? 0), sudah: Number(progres.get(row.id)?.sudah ?? 0) }
+              : null,
           };
         })
       );
