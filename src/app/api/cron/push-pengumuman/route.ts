@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ensurePengumumanTable } from "@/lib/pengumumanDb";
 import { kirimPushPengumumanPenting } from "@/lib/pengumumanPush";
+import { ensurePeraturanTables } from "@/lib/peraturanDb";
+import { kirimPushPeraturanTerbit } from "@/lib/peraturanPush";
 
 // Dipanggil Scheduled Task Coolify tiap 5 menit, dengan header `Authorization: Bearer <CRON_SECRET>`.
-// Mengirim push pengumuman penting yang tgl_notifikasi-nya (WIB) sudah tiba; aman dipanggil berulang.
+// Mengirim push pengumuman penting yang tgl_notifikasi-nya (WIB) sudah tiba, dan satu push untuk
+// dokumen Peraturan Perusahaan yang baru terbit (batch jam 15:00); aman dipanggil berulang.
 export async function GET(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
   if (!secret) {
@@ -16,7 +19,9 @@ export async function GET(req: NextRequest) {
   try {
     await ensurePengumumanTable();
     const hasil = await kirimPushPengumumanPenting();
-    return NextResponse.json({ success: true, hasil });
+    await ensurePeraturanTables();
+    const peraturan = await kirimPushPeraturanTerbit();
+    return NextResponse.json({ success: true, hasil, peraturan });
   } catch (error) {
     console.error("[Cron] Gagal memproses push pengumuman:", error);
     return NextResponse.json({ error: "Gagal memproses push pengumuman." }, { status: 500 });

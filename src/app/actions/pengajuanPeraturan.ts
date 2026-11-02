@@ -7,6 +7,7 @@ import { unlink } from "fs/promises";
 import path from "path";
 import type { ResultSetHeader } from "mysql2";
 import { PERATURAN_UPLOAD_DIR } from "@/lib/peraturanUploads";
+import { formatTerbitLabel, jadwalTerbitWib } from "@/lib/peraturanDb";
 
 type PengajuanRecord = {
   status?: string | null;
@@ -68,9 +69,11 @@ export async function approvePengajuanPeraturan(formData: FormData) {
       return { success: false, message: "Pengajuan ini sudah diproses." };
     }
 
+    // Tidak langsung tampil: terbit bersamaan di batch jam 15:00 WIB berikutnya.
+    const terbitAt = jadwalTerbitWib();
     const [insert] = await conn.query<ResultSetHeader>(
-      "INSERT INTO peraturan_perusahaan (judul, file, uploaded_by) VALUES (?, ?, ?)",
-      [record.judul || record.file, record.file, adminId]
+      "INSERT INTO peraturan_perusahaan (judul, file, uploaded_by, terbit_at) VALUES (?, ?, ?, ?)",
+      [record.judul || record.file, record.file, adminId, terbitAt]
     );
 
     await conn.query(
@@ -83,7 +86,10 @@ export async function approvePengajuanPeraturan(formData: FormData) {
     await conn.commit();
 
     revalidatePath("/peraturan_perusahaan");
-    return { success: true, message: "Pengajuan disetujui. Dokumen sudah masuk ke Peraturan Perusahaan." };
+    return {
+      success: true,
+      message: `Pengajuan disetujui. Dokumen terbit di Peraturan Perusahaan ${formatTerbitLabel(terbitAt)} WIB.`,
+    };
   } catch (error) {
     await conn.rollback().catch(() => {});
     console.error("Failed to approve pengajuan peraturan:", error);
